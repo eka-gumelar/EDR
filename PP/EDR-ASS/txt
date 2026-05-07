@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Report Assembling System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; overflow-x: hidden; }
+        .font-timer { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        ::-webkit-scrollbar { height: 6px; width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .hide { display: none !important; }
+        .glass-panel { background: #ffffff; border: 1px solid #e2e8f0; }
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 10px; }
+        .toast { padding: 12px 20px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
+        .toast.warning { background-color: #f59e0b; }
+        .admin-tab-active { border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: bold; background-color: #eff6ff; }
+        .editable-cell { cursor: text; border-bottom: 1px dashed #cbd5e1; transition: all 0.2s; }
+        .editable-cell:focus { outline: none; background-color: #fffbeb; border-bottom: 2px solid #f59e0b; }
+        
+        /* Animasi Pop-in untuk Chip MP */
+        .chip-enter { animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <datalist id="wp-datalist"></datalist>
+    <div id="toast-container"></div>
+    <div id="network-status" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-1 rounded-full text-xs font-semibold hide shadow-md">
+        <i class="fas fa-wifi mr-1"></i> <span id="network-text">Online</span>
+    </div>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-100 z-40 flex items-center justify-center">
+        <div class="glass-panel p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-96 flex flex-col items-center">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-5 shadow-md">
+                <i class="fas fa-file-alt text-3xl text-white"></i>
+            </div>
+            <h2 class="text-xl font-black text-slate-900 leading-tight text-center tracking-tight mb-1 uppercase">
+                PROSES ASSEMBLING<br>DAILY REPORT
+            </h2>
+            <p class="text-[12px] text-slate-500 mb-8 font-medium tracking-wide">v.2.5.3 (Stable UI Engine)</p>
+            
+            <div class="w-full space-y-5">
+                <div class="text-left">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">LISENSI ID / USERNAME</label>
+                    <input type="text" id="login-lisensi" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white uppercase font-mono text-sm transition-colors text-slate-800 font-semibold" onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('login-pass').focus(); }">
+                </div>
+                <div class="text-left">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">PASSWORD</label>
+                    <input type="password" id="login-pass" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-sm transition-colors text-slate-800 font-semibold" onkeydown="if(event.key === 'Enter') { event.preventDefault(); app.login(); }">
+                </div>
+                <div class="pt-2">
+                    <button onclick="app.login()" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-[0.98]">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD -->
+    <div id="main-dashboard" class="flex-1 flex flex-col h-full hide">
+        <header class="bg-white flex flex-col shrink-0 border-b border-slate-200">
+            <div class="flex justify-between items-center px-6 py-4 shadow-sm z-10 relative">
+                <h1 class="text-3xl font-black text-slate-900 tracking-tighter flex items-center drop-shadow-sm">
+                    PROSES <span class="text-blue-600 ml-2">ASSEMBLING</span>
+                </h1>
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="app.toggleIstirahat()" id="btn-istirahat" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1.5 rounded font-medium text-xs flex items-center gap-1 shadow-sm transition">
+                        <i class="fas fa-coffee"></i> Istirahat
+                    </button>
+                    <button onclick="app.showPendingList()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded font-medium text-xs flex items-center gap-1 relative shadow-sm transition">
+                        <i class="fas fa-clock"></i> Pending
+                        <span id="pending-count" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+                    </button>
+                    <div class="w-px h-5 bg-slate-200 mx-1 hidden sm:block"></div>
+                    <button onclick="app.openReportModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded shadow-sm transition">Data Report</button>
+                    <button onclick="app.openAdminLogin()" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-black text-xs font-bold rounded shadow-sm transition uppercase">ADMIN</button>
+                    <button onclick="app.logout()" class="px-4 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 text-xs font-bold rounded shadow-sm transition">Keluar</button>
+                </div>
+            </div>
+            <div class="flex justify-between items-center px-6 py-2 bg-slate-50/50">
+                <div class="flex flex-wrap gap-2 md:gap-4">
+                    <div class="flex items-center text-[10px] font-bold bg-blue-50/50 border border-blue-100 rounded-lg text-slate-600 overflow-hidden shadow-sm">
+                        <span class="px-3 py-1.5 text-blue-500 uppercase tracking-widest">LEADER</span>
+                        <span class="px-3 py-1.5 bg-transparent text-slate-800 border-l border-blue-100" id="header-leader">-</span>
+                    </div>
+                    <div class="flex items-center text-[10px] font-bold bg-slate-50/50 border border-slate-200 rounded-lg text-slate-600 overflow-hidden shadow-sm">
+                        <span class="px-3 py-1.5 text-slate-500 uppercase tracking-widest">SHIFT</span>
+                        <span class="px-3 py-1.5 bg-transparent text-slate-800 border-l border-slate-200" id="header-shift">-</span>
+                    </div>
+                </div>
+                <div class="text-[11px] font-bold text-slate-800 bg-white border border-slate-200 px-4 py-1.5 rounded-lg shadow-sm tracking-wide hidden sm:block" id="clock-display">-</div>
+            </div>
+        </header>
+
+        <div class="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 shrink-0 relative">
+                <div class="flex flex-col lg:flex-row gap-4 items-center w-full">
+                    <div class="flex-1 w-full min-w-[250px]">
+                        <label class="block text-xs font-bold text-blue-600 mb-1"><i class="fas fa-barcode"></i> SCAN IN AREA (INISIASI)</label>
+                        <div class="relative">
+                            <i class="fas fa-qrcode absolute left-3 top-3 text-slate-400"></i>
+                            <input type="text" id="main-scan-input" placeholder="Scan Barcode mulai..." class="w-full pl-10 pr-4 py-2 border-2 border-blue-200 bg-blue-50/30 rounded-lg focus:outline-none focus:border-blue-500 font-mono text-sm shadow-inner">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0 mt-4 lg:mt-5">
+                        <button onclick="app.openManualInputModal()" title="Manual Input" class="w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><i class="fas fa-keyboard text-lg"></i></button>
+                        <button onclick="app.openBatchMode()" title="Batch Mode" class="w-10 h-10 flex items-center justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl border border-indigo-200 shadow-sm cursor-pointer"><i class="fas fa-layer-group text-lg"></i></button>
+                    </div>
+                    <div class="flex-1 w-full min-w-[250px]">
+                        <label class="block text-xs font-bold text-teal-600 mb-1 tracking-wide"><i class="fas fa-sign-out-alt mr-1"></i> SCAN OUT (FINISH)</label>
+                        <div class="relative">
+                            <i class="fas fa-barcode absolute left-3 top-3 text-teal-400"></i>
+                            <input type="text" id="scan-out-input" placeholder="Scan Barcode finish..." class="w-full pl-10 pr-4 py-2 border-2 border-teal-200 bg-teal-50/30 rounded-lg focus:outline-none focus:border-teal-500 font-mono text-sm shadow-inner">
+                        </div>
+                    </div>
+                </div>
+
+    <!-- APPLICATION LOGIC -->
+    <script>
+        let masterDataAssy = [
+            { no_assy: "0005386-012", cct: 227, umh: 300, last_edited: "2024-05-01" },
+            { no_assy: "0005513-020", cct: 249, umh: 195, last_edited: "2024-05-01" },
+            { no_assy: "0005555-008D", cct: 126, umh: 282, last_edited: "2024-05-01" },
+            { no_assy: "0005695-010", cct: 123, umh: 282, last_edited: "2024-05-01" }
+        ];
+
+        let masterDataMP = [
+            { id: "A001", nama: "Rita Juantina", join_date: "2023-08-14", shift: "A", last_edited: "2024-05-01" },
+            { id: "A002", nama: "Chandra Hizbullah", join_date: "2022-06-27", shift: "A", last_edited: "2024-05-01" },
+            { id: "A003", nama: "Abdul Azis", join_date: "2021-12-27", shift: "B", last_edited: "2024-05-01" },
+            { id: "A004", nama: "Hilal Abiyyu", join_date: "2021-07-14", shift: "B", last_edited: "2024-05-01" }
+        ];
+
+        let masterDataLeader = [
+            { lisensi: "111", pass: "111", nama: "Demo Leader", line: "Line 1", shift: "A", last_edited: "2024-05-01" },
+            { lisensi: "AS0001", pass: "1000SA", nama: "Abdul", line: "Line 2", shift: "A", last_edited: "2024-05-01" },
+            { lisensi: "AS0002", pass: "2000SA", nama: "Cantika", line: "Line 1", shift: "B", last_edited: "2024-05-01" }
+        ];
+
+
+
+
+            init: async function() {
+                try {
+                    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                    if(firebaseConfig && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                    if(firebase.apps.length) {
+                        this.auth = firebase.auth(); this.db = firebase.firestore();
+                        try { await this.db.enablePersistence({ synchronizeTabs: true }); } catch (e) {}
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await this.auth.signInWithCustomToken(__initial_auth_token);
+                        else await this.auth.signInAnonymously();
+                        this.auth.onAuthStateChanged(user => { if(user){ this.user = user; } });
+                    } else { this.useLocalFallback(); }
+                    
+                    this.setupUIBindings(); this.startClock(); this.monitorNetwork();
+                    Chart.defaults.animation = false;
+                } catch(e) { this.showToast("System Init Error", "error"); }
+            },
+
+
+    </script>
+</body>
+</html>

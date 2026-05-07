@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDR - PROSES TWIST</title>
+    <link rel="icon" href="assets/edr-tws.png" type="image/png">
+    <style>
+        /* --- [01. VARIABEL WARNA & TEMA GLOBAL] --- */
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            /* TEMA PINK & BLUE UNTUK TWIST */
+            --primary: #ec4899; /* Pink */
+            --accent: #3b82f6; /* Blue */
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-size: 15px;
+            transition: background-color 0.3s;
+            overflow-y: auto; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- [02. KOMPONEN UI DASAR] --- */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; position: relative; }
+        .label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; display: block; letter-spacing: 0.05em; }
+        .input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-body); color: var(--text-main); font-size: 15px; font-weight: 700; outline: none; transition: 0.2s; }
+        .input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.15); background: #fff; }
+        .input:disabled { opacity: 0.6; cursor: not-allowed; background: #e2e8f0; border-color: transparent; }
+
+        .btn { cursor: pointer; border: none; border-radius: 8px; padding: 12px 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4); }
+        .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; box-shadow: none; }
+        .btn-update { background: var(--warning); color: black; }
+        .btn-danger { background: #fce7f3; color: var(--primary); border: 1px solid #fbcfe8; }
+        .btn-danger:hover { background: #fbcfe8; }
+        .btn-clear-header { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 6px 12px; font-size: 10px; border-radius: 6px; text-transform: uppercase; }
+        .btn-clear-header:hover { background: #fee2e2; color: var(--danger); border-color: var(--danger); }
+        .btn-edit { color: var(--accent); border: 1px solid var(--accent); background: transparent; padding: 4px 10px; font-size: 10px; font-weight: 900; }
+        .btn-edit:hover { background: var(--accent); color: white; }
+        .btn-delete-row { color: var(--danger); border: 1px solid var(--danger); background: transparent; padding: 4px 10px; font-size: 10px; font-weight: 900; }
+        .btn-delete-row:hover { background: var(--danger); color: white; }
+
+        /* --- [03. NAVIGASI & HEADER] --- */
+        nav { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
+        
+        .header-info { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 15px; flex-shrink: 0; position: sticky; top: 58px; z-index: 40; }
+        .info-badge { display: flex; align-items: center; background: var(--bg-body); padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); gap: 10px; }
+        .info-badge label { font-size: 10px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-right: 1px solid var(--border); padding-right: 10px; margin-bottom: 0; }
+        .info-badge span { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .info-badge.user-active { background: rgba(236, 72, 153, 0.08); border-color: rgba(236, 72, 153, 0.2); }
+        .clock-display { margin-left: auto; font-family: 'Segoe UI'; font-weight: 600; color: var(--accent); font-size: 15px; background: rgba(59, 130, 246, 0.08); padding: 8px 18px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+        /* --- [TATA LETAK UTAMA FLEKSIBEL] --- */
+        .container { 
+            padding: 15px 20px; 
+            display: grid; 
+            grid-template-columns: minmax(350px, 1fr) 1.5fr; 
+            gap: 20px; 
+            flex: 1; 
+            align-items: stretch; 
+        }
+
+        /* --- [04. VISUAL PART & GAMBAR] --- */
+        .twist-visual-box {
+            background: #f8fafc;
+            border: 3px dashed var(--accent);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 280px;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        .twist-visual-box::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(236,72,153,0.05) 0%, rgba(59,130,246,0.05) 100%);
+            z-index: 0;
+            animation: spinBg 20s linear infinite;
+        }
+        @keyframes spinBg { 100% { transform: rotate(360deg); } }
+        
+        .twist-icon-wrapper {
+            position: relative;
+            z-index: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(59,130,246,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- [05. PROGRESS BAR & PENCAPAIAN] --- */
+        .monitor-grid { display: flex; flex-direction: column; height: 100%; justify-content: center; align-items: center; text-align: center; gap: 5px; padding: 5px 0; }
+        .monitor-val { font-size: 64px; font-weight: 900; color: var(--primary); line-height: 0.9; margin: 0; width: 100%; }
+        .monitor-stats-row { display: grid; grid-template-columns: 1fr 2px 1fr 2px 1fr; gap: 5px; align-items: center; width: 100%; margin: 15px 0; }
+        .progress-section { width: 100%; padding-top: 8px; border-top: 1px solid var(--border); margin-top: auto; }
+        .progress-bg { height: 10px; background: var(--bg-body); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); width: 100%; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* --- [FLOATING MONITOR PANEL] --- */
+        .floating-monitor { position: fixed; right: -320px; top: 120px; width: 320px; background: var(--bg-card); border: 1px solid var(--border); border-right: none; border-radius: 16px 0 0 16px; box-shadow: -5px 5px 25px rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 900; padding: 20px; }
+        .floating-monitor.open { right: 0; }
+        .monitor-toggle-btn { position: absolute; left: -45px; top: 20px; width: 45px; height: 45px; background: var(--bg-card); border: 1px solid var(--border); border-right: none; border-radius: 12px 0 0 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: -4px 4px 10px rgba(0,0,0,0.05); color: var(--primary); transition: 0.3s; }
+        .monitor-toggle-btn:hover { background: var(--bg-body); width: 50px; left: -50px; }
+        .monitor-toggle-btn svg { transition: transform 0.4s; }
+        .floating-monitor.open .monitor-toggle-btn svg { transform: rotate(180deg); }
+
+        /* --- [06. TABEL MIKRO FULL WIDTH] --- */
+        .table-container { grid-column: 1 / -1; display: flex; flex-direction: column; min-height: 350px; margin-top: 5px; }
+        .table-scroll { flex: 1; overflow-y: auto; border-top: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--accent); border-bottom: 2px solid var(--border); position: sticky; top: 0; background: var(--bg-card); z-index: 10; letter-spacing: 0.05em; }
+        td { padding: 10px 15px; border-bottom: 1px solid var(--border); }
+        
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+
+        .btn-help { background: #e2e8f0; color: var(--text-muted); width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; cursor: pointer; transition: 0.2s; border: none; margin-left: 8px; font-family: monospace; }
+        .btn-help:hover { background: var(--primary); color: white; transform: scale(1.1); }
+
+        .drop-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 25px; text-align: center; background: var(--bg-body); position: relative; transition: all 0.3s ease; color: var(--text-muted); overflow: hidden; }
+        .drop-zone.active { border-color: var(--primary); background: rgba(236, 72, 153, 0.05); color: var(--primary); }
+        
+        .sop-list { padding-left: 20px; margin-top: 8px; margin-bottom: 15px; font-size: 13px; color: var(--text-main); }
+        .sop-list li { margin-bottom: 8px; line-height: 1.4; padding-left: 5px; }
+
+        #global-loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { border: 4px solid rgba(236, 72, 153, 0.2); border-left-color: var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- [19. TOAST NOTIFICATIONS] --- */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column-reverse; gap: 10px; pointer-events: none; width: 100%; max-width: 380px; align-items: flex-end; }
+        .toast { background: var(--bg-card); color: var(--text-main); padding: 16px 20px; border-radius: 12px; border-left: 6px solid; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; align-items: flex-start; gap: 14px; opacity: 0; transform: translateX(50px); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; text-align: left; width: 100%; position: relative; overflow: hidden; }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast-success { border-left-color: var(--primary); }
+        .toast-error { border-left-color: var(--danger); }
+        .toast-info { border-left-color: var(--accent); }
+        
+        .toast-icon { flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .toast-success .toast-icon { background: rgba(236, 72, 153, 0.15); color: var(--primary); }
+        .toast-error .toast-icon { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .toast-info .toast-icon { background: rgba(59, 130, 246, 0.15); color: var(--accent); }
+        
+        .toast-content { flex: 1; display: flex; flex-direction: column; gap: 4px; padding-top: 4px; }
+        .toast-title { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1; }
+        .toast-success .toast-title { color: var(--primary); }
+        .toast-error .toast-title { color: var(--danger); }
+        .toast-info .toast-title { color: var(--accent); }
+        .toast-message { font-size: 13px; font-weight: 600; color: var(--text-muted); line-height: 1.4; }
+
+        /* --- [09. PAGINASI VIRTUALISASI DOM CSS] --- */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--bg-card); border-top: 1px solid var(--border); border-radius: 0 0 8px 8px; }
+        .btn-page { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-page:hover:not(:disabled) { background: var(--accent); color: white; border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(59,130,246,0.2); }
+        .btn-page:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg-body); box-shadow: none; transform: none; color: var(--text-muted); border-color: var(--border); }
+
+        /* --- [20. VIRTUAL KEYBOARD KECIL & MELAYANG KONTEKSTUAL] --- */
+        .virtual-keyboard { position: absolute; display: none; width: 360px; background: #e2e8f0; box-shadow: 0 12px 30px rgba(0,0,0,0.25); padding: 8px; border-radius: 12px; flex-direction: column; gap: 6px; z-index: 5000; border: 1px solid #cbd5e1; user-select: none; }
+        .virtual-keyboard.vk-show { display: flex; animation: vkPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes vkPop { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .vk-row { display: flex; justify-content: center; gap: 4px; width: 100%; }
+        .vk-key { flex: 1; height: 38px; background: #ffffff; border: 1px solid #cbd5e1; border-bottom: 3px solid #94a3b8; border-radius: 6px; font-size: 14px; font-weight: 900; color: #0f172a; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s; text-transform: uppercase; font-family: inherit; }
+        .vk-key:active { transform: translateY(2px); border-bottom-width: 1px; margin-top: 2px; background: #f1f5f9; color: var(--primary); }
+        .vk-key.vk-wide { flex: 1.5; font-size: 12px; }
+        .vk-key.vk-action { background: #94a3b8; color: white; border-color: #64748b; border-bottom-color: #475569; }
+        .vk-key.vk-action:active { background: #64748b; color: white; }
+        
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body id="main-body">
+
+    <!-- DATALISTS UNTUK DROPDOWN AUTOCOMPLETE -->
+    <datalist id="list-assy"></datalist>
+    <datalist id="list-twist-len"></datalist>
+
+    <!-- LOADING OVERLAY -->
+    <div id="global-loader" class="hidden">
+        <div class="spinner"></div>
+        <div style="font-weight: 800; color: var(--primary); font-size: 16px; letter-spacing: 2px;">MEMPROSES DATA...</div>
+    </div>
+
+    <!-- HALAMAN LOGIN -->
+    <div id="login-page" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="card" style="width: 100%; max-width: 420px; text-align: center; height: auto;">
+            <div id="login-icon-box" style="width: 100px; height: 100px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                <img src="assets/edr-tws.png" alt="Logo Perusahaan" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23cbd5e1%22 stroke-width=%222%22><rect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%222%22 ry=%222%22></rect><circle cx=%228.5%22 cy=%228.5%22 r=%221.5%22></circle><polyline points=%2221 15 16 10 5 21%22></polyline></svg>'; this.style.width='60px';">
+        </div>
+            <h1 class="font-black" style="font-size: 24px; font-weight: 800; color: black;">PROSES TWIST</h1>
+            <p style="color: black; font-size: 20px; font-weight: 800; margin-bottom: 0px; margin-top: -5px;">DAILY REPORT</p>
+            <p style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 25px; margin-top: 2px;">v.1.5.04</p>
+
+            <form id="login-form" style="text-align: left;">
+                <div style="margin-bottom: 15px;"><label class="label">Lisensi ID / Username</label><input type="text" id="login-username" required class="input" placeholder=""></div>
+                <div style="margin-bottom: 20px;"><label class="label">Password</label><input type="password" id="login-password" required class="input" placeholder=""></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">Login</button>
+            </form>
+            <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" onclick="startTraining()" class="btn btn-ghost" style="color: var(--text-muted); font-weight: 800; width: 100%; background: transparent;">MODE TRAINING</button>
+            </div>
+        </div>
+        
+        <button onclick="openModal('modal-import-license')" class="btn" style="position: fixed; bottom: 20px; right: 20px; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; opacity: 0.3; cursor: pointer; transition: all 0.3s ease; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 0;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.1)'; this.style.color='var(--primary)';" onmouseout="this.style.opacity='0.3'; this.style.transform='scale(1)'; this.style.color='var(--text-muted)';" title="Sinkronisasi File/Folder data_users">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        </button>
+    </div>
+
+    <!-- HALAMAN DASHBOARD MP -->
+    <div id="app-page" class="hidden">
+        <nav>
+            <div class="font-black" style="font-size: 24px; letter-spacing: -0.04em; line-height: 1; font-weight: 900; color: var(--text-main);">
+                PROSES <span style="background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TWIST</span>
+            </div>
+            <!-- Tombol QAS dan Search Accessories telah dihapus sesuai arahan -->
+            <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+                <button onclick="openModal('modal-help-mp')" class="btn-help" title="Petunjuk Pengisian" style="margin-right: 5px;">?</button>
+                <button onclick="openArchive(true)" class="btn btn-ghost" style="background: var(--border); color: var(--text-main); font-size: 12px; padding: 10px 14px; border: none;">Data Report</button>
+                <button id="btn-end-shift" onclick="endShift()" class="btn" style="background: var(--warning); color: black; padding: 10px 14px; font-size: 12px; font-weight: 900;">End Shift</button>
+                <button onclick="logout()" class="btn" style="border: none; background: #fce7f3; color: var(--primary); font-weight: 800; padding: 10px 14px; font-size: 12px;">Keluar</button>
+            </div>
+        </nav>
+
+        <header class="header-info">
+            <div class="info-badge user-active"><label>User</label><span id="ui-user">-</span></div>
+            <div class="info-badge"><label>Shift</label><span id="ui-shift">-</span></div>
+            <div class="info-badge">
+                <label>Proses</label>
+                <select id="ui-proses" onchange="executeWithLoader(() => changeProcess(this.value))" style="appearance: none; -webkit-appearance: none; background: transparent; border: none; font-size: 14px; font-weight: 700; color: var(--text-main); outline: none; cursor: pointer; padding: 0; font-family: inherit; margin: 0; text-align: left;">
+                    <option value="TWIST REGULAR">TWIST REGULAR</option>
+                    <option value="TWIST PROJECT">TWIST PROJECT</option>
+                    <option value="SIMULASI">SIMULASI (TRAINING)</option>
+                </select>
+            </div>
+            <div class="clock-display" id="ui-clock"></div>
+        </header>
+
+        <div id="spectator-warning" class="hidden" style="background: var(--warning); color: black; text-align: center; padding: 10px; font-weight: 800; font-size: 14px; letter-spacing: 0.05em;">
+            ⚠ SHIFT TELAH DIAKHIRI. ANDA BERADA DALAM MODE PENGAMAT (SPECTATOR). INPUT DATA DIKUNCI.
+        </div>
+
+        <main class="container" id="main-container">
+            <!-- KOLOM KIRI: FORM INPUT -->
+            <div style="display: flex; flex-direction: column; gap: 12px; height: 100%;">
+                
+                <!-- CARD FORM DATA INPUT (Tinggi Maksimal & Bagian Validasi Material Dihilangkan) -->
+                <div class="card" id="form-card" style="flex: 1; transition: all 0.3s; position: relative; padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; z-index: 11;">
+                        <label class="label" id="ui-form-title" style="color: var(--primary); margin: 0; font-size: 14px;">📝 Data Produksi Twist</label>
+                        <button onclick="clearInputs()" class="btn btn-clear-header">Clear Semua Data</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label class="label">Assy No.</label>
+                        <input type="text" id="in-assy" list="list-assy" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)">
+                    </div>
+                    
+                    <!-- 2 Kolom Bersebelahan untuk CCT No -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label class="label" style="color: var(--accent);">CCT No. 1</label>
+                            <input type="text" id="in-cct-1" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)">
+                        </div>
+                        <div>
+                            <label class="label" style="color: var(--accent);">CCT No. 2</label>
+                            <input type="text" id="in-cct-2" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)">
+                        </div>
+                    </div>
+                    
+                    <!-- Validasi Panjang Potong Dipindah Ke Sini -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; padding: 12px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--accent); border-radius: 8px;">
+                        <div>
+                            <label class="label">Cutting Length (mm)</label>
+                            <input type="number" id="in-cut-len" list="list-twist-len" class="input" placeholder="Ketik panjang..." oninput="validateTwistLength(this.value)" onfocus="openKeyboard(this)">
+                        </div>
+                        <div>
+                            <label class="label" style="color: var(--primary);">Jumlah Putaran</label>
+                            <div id="ui-twist-count" class="input" style="background: rgba(236, 72, 153, 0.05); border-color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: var(--primary); height: 48px;">-</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label class="label">W/P</label>
+                            <input type="text" id="in-wp" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)">
+                        </div>
+                        <div>
+                            <label class="label" style="color: var(--primary);">Qty (Akan dikali 2) <span id="ui-multiplier" style="color:var(--accent); font-size:9px;"></span></label>
+                            <input type="number" id="in-qty" class="input" max="100" placeholder="" style="border-color: var(--primary);" oninput="checkFormCompleteness()" onfocus="closeKeyboard()" oncontextmenu="openMultiplier(event)">
+                        </div>
+                    </div>
+                    
+                    <button id="btn-submit" onclick="handleSave()" class="btn btn-primary" style="width:100%; padding: 16px; font-size: 16px; margin-top: auto;" disabled>SIMPAN DATA (ENTER)</button>
+                    <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn hidden" style="width:100%; margin-top:10px; border:2px solid var(--border); padding: 12px; background: white; color: var(--text-main); font-size: 14px;">BATAL EDIT</button>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN: MONITORING OUTPUT (Menggantikan Visual) -->
+            <div style="display: flex; flex-direction: column; gap: 12px; height: 100%;">
+                <div class="card" style="position: relative; flex: 1; padding: 30px; display: flex; flex-direction: column;">
+                    <label class="label" style="color: var(--primary); margin-bottom: 5px; text-align: center; font-size: 14px;">📊 Monitor Achievements</label>
+                    
+                    <!-- Area Tengah untuk Output dan Target -->
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+                        <p style="font-size: 12px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 10px;">Output Saat Ini</p>
+                        <div id="ui-total" class="monitor-val" style="font-size: 80px; text-align: center;">0</div>
+
+                        <div class="monitor-stats-row" style="grid-template-columns: 1fr 2px 1fr 2px 1fr; gap: 10px; margin: 30px 0 0 0; width: 100%; max-width: 400px;">
+                            <div style="text-align: center;"><label class="label" style="font-size: 10px;">Target</label><div id="ui-target" class="font-black" style="font-size: 20px; font-weight: 800;">0</div></div>
+                            <div style="width: 2px; background: var(--border); height: 35px; margin: 0 auto;"></div>
+                            <div style="text-align: center;"><label class="label" style="font-size: 10px; color:var(--accent);">/ Jam</label><div id="ui-target-hourly" class="font-black" style="font-size: 20px; font-weight: 800; color:var(--accent);">0</div></div>
+                            <div style="width: 2px; background: var(--border); height: 35px; margin: 0 auto;"></div>
+                            <div style="text-align: center;"><label class="label" style="font-size: 10px;">Balance</label><div id="ui-gap" class="font-black" style="font-size: 20px; color: var(--danger); font-weight: 800;">0</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Area Bawah untuk Progress Bar -->
+                    <div class="progress-section" style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span class="label" style="margin:0; font-size: 10px; color: var(--accent);">Pencapaian (Achievements)</span>
+                            <span id="ui-percent" class="font-black" style="font-size: 14px; color: var(--accent); font-weight: 800;">0%</span>
+                        </div>
+                        <div class="progress-bg" style="height: 16px;"><div id="ui-progress-bar" class="progress-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABEL RIWAYAT: FULL WIDTH DARI UJUNG KIRI KE KANAN -->
+            <div class="card table-container">
+                <div style="padding: 12px 20px; background: var(--bg-body); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                    <span class="label" style="margin:0; font-size: 12px;">Riwayat Input Sesi Ini</span>
+                    <span id="ui-count" style="font-size: 11px; font-weight: 900; background: var(--accent); color: white; padding: 4px 12px; border-radius: 12px;">0 WOS</span>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Assy No</th>
+                                <th>CCT 1</th>
+                                <th>CCT 2</th>
+                                <th>WP</th>
+                                <th style="text-align:center;">Total Qty</th>
+                                <th>Timestamp</th>
+                                <th style="text-align:right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="main-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- PANEL MONITOR MELAYANG DIHAPUS (Sudah pindah ke kolom kanan) -->
+
+    <!-- ================= MODALS & SOP ================= -->
+    <div id="modal-import-license" class="modal">
+        <div class="card" style="width: 100%; max-width: 450px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">SINKRONISASI LISENSI</h3><button onclick="openModal('modal-help-import')" class="btn-help" style="background: var(--bg-body);" title="Petunjuk Instruksi Kerja">?</button></div>
+                <button onclick="closeModal('modal-import-license')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">Sistem membutuhkan injeksi berkas lisensi agar dapat meregistrasi pekerja ke dalam memori komputer ini (secara <i>Offline</i>).</p>
+            <div class="drop-zone" style="padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; cursor: pointer;"
+                 onclick="document.getElementById('sync-file-input').click()"
+                 ondragover="event.preventDefault(); this.classList.add('active');" ondragleave="this.classList.remove('active');" ondrop="event.preventDefault(); this.classList.remove('active'); handleCustomDrop(event, 'sync');">
+                <input type="file" id="sync-file-input" webkitdirectory directory multiple onchange="handleFileInput(event, 'sync')" class="hidden">
+                <div style="pointer-events: none; position: relative; z-index: 1; text-align: center;"><span style="font-size: 40px; display: block; margin-bottom: 10px;">🪪</span><span style="font-weight: 800; font-size: 14px; color: var(--text-main);">Tarik File / Folder <span style="color:var(--primary);">data_users</span> Kemari</span><br><span style="font-size: 11px; opacity: 0.7;">Atau klik untuk memuat manual</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals Help -->
+    <div id="modal-help-mp" class="modal" style="z-index: 1001;"><div class="card" style="width: 100%; max-width: 420px;"><h3 class="font-black" style="margin-bottom: 10px; border-bottom: 2px solid var(--border); padding-bottom: 5px; font-weight: 800; color: var(--primary);">PANDUAN: INPUT PRODUKSI TWIST</h3><div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;"><ol class="sop-list" style="margin-top: 10px;"><li>Masukkan data menggunakan alat pemindai atau ketik manual berurutan mulai dari <b>Assy No, CCT No 1, CCT No 2, WP</b>, dan <b>Qty</b>.</li><li>Tekan tombol <b>ENTER</b> pada <i>keyboard</i> setelah mengisi Qty. <b>Qty akan otomatis dikali 2</b> oleh sistem.</li><li>Setelah itu, form CCT 1, CCT 2, dan Qty akan otomatis kosong dan kursor melompat ke <b>CCT No. 1</b> agar Anda dapat langsung mengisi CCT berikutnya.</li><li>Klik tombol <b>End Shift</b> hanya jika jam kerja Anda telah selesai untuk mengunduh laporan JSON.</li></ol></div><button onclick="closeModal('modal-help-mp')" class="btn btn-primary" style="width: 100%;">SAYA MENGERTI</button></div></div>
+    <div id="modal-help-import" class="modal" style="z-index: 1001;"><div class="card" style="width: 100%; max-width: 420px;"><h3 class="font-black" style="margin-bottom: 10px; border-bottom: 2px solid var(--border); padding-bottom: 5px; font-weight: 800;">PANDUAN: SINKRONISASI LISENSI</h3><div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;"><ol class="sop-list" style="margin-top: 10px;"><li>Pastikan Anda telah membuat fail JSON pekerja di menu <b>Registrasi Lisensi</b>.</li><li>Kumpulkan seluruh fail JSON tersebut ke dalam 1 (satu) folder khusus di Desktop yang diberi nama persis: <b>data_users</b>.</li><li>Tahan klik <i>(Drag)</i> file / folder tersebut menggunakan tetikus.</li><li>Geser dan lepaskan <i>(Drop)</i> persis di dalam kotak bergaris putus-putus pada layar ini.</li><li>Proses ini wajib dilakukan satu kali pada setiap perangkat/komputer baru di area produksi.</li></ol></div><button onclick="closeModal('modal-help-import')" class="btn btn-primary" style="width: 100%;">SAYA MENGERTI</button></div></div>
+
+    <div id="modal-mul" class="modal"><div class="card" style="width: 300px; text-align: center; height: auto;"><h3 class="font-black" style="margin-bottom: 10px; font-size: 18px; font-weight: 800; color: var(--primary);">Multiplier WOS</h3><p style="font-size: 10px; opacity: 0.6; margin-bottom: 15px;">Masukkan jumlah lembar WOS</p><input type="number" id="in-mul" value="1" min="1" class="input" style="text-align: center; font-size: 30px; margin-bottom: 20px;"><button onclick="applyMultiplier()" class="btn btn-primary" style="width: 100%;">SET JUMLAH WOS</button></div></div>
+    
+    <div id="modal-training" class="modal"><div class="card" style="width: 100%; max-width: 350px; text-align: center; height: auto;"><h3 class="font-black" style="color: var(--primary); font-size: 18px; margin-bottom: 10px; font-weight: 800;">MODE TRAINING</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Silakan masukkan nama Anda untuk memulai sesi simulasi kerja tanpa menyimpan data ke memori utama.</p><input type="text" id="in-training-name" class="input" placeholder="Ketik nama Anda di sini..." style="margin-bottom: 20px; text-align: center;"><div style="display: flex; gap: 10px;"><button onclick="closeModal('modal-training')" class="btn" style="flex: 1; background: var(--border); color: var(--text-main);">BATAL</button><button onclick="submitTrainingName()" class="btn btn-primary" style="flex: 1;">MULAI LATIHAN</button></div></div></div>
+
+    <!-- ARCHIVE MODAL -->
+    <div id="modal-arc" class="modal">
+        <div class="card" style="width: 100%; max-width: 900px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 class="font-black" style="font-weight: 800; color: var(--primary);">Data Record Sesi Aktif</h2>
+                    <p style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Lihat atau unduh ulang laporan WOS berdasarkan rentang satu hari kerja.</p>
+                </div>
+                <button onclick="openArchive(false)" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">TUTUP</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; background: var(--bg-body); padding: 15px; border-radius: 10px; align-items: flex-end; flex-wrap: wrap;">
+                <div><label class="label">Pilih Tanggal</label><input type="date" id="arc-date" class="input" style="padding: 10px; font-size: 13px;" onchange="executeWithLoader(renderArchiveTable)"></div>
+                <div><button onclick="exportArchiveJSON()" class="btn btn-primary" style="padding: 12px 16px; font-size: 13px;">⬇️ Save to JSON</button></div>
+                <div style="text-align: right; min-width: 120px; border-left: 2px solid var(--border); padding-left: 15px; margin-left: auto;">
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
+                        <label class="label" style="margin: 0;">Total Qty (Sesudah x2)</label>
+                        <span id="arc-wos-count" style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 900;">0 WOS</span>
+                    </div>
+                    <div id="arc-total" class="font-black" style="font-size: 24px; color: var(--primary); font-weight: 900;">0</div>
+                </div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <tr>
+                            <th>Assy No</th>
+                            <th>CCT 1</th>
+                            <th>CCT 2</th>
+                            <th>WP</th>
+                            <th style="text-align: center;">Total Qty</th>
+                            <th>Waktu Input</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-table-body">
+                        <tr><td colspan="6" style="text-align: center; padding: 40px; opacity: 0.5;">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Paginasi UI Data Report -->
+            <div id="arc-pagination" class="pagination-container hidden" style="margin-top: 15px; border-top: 1px dashed var(--border); background: transparent; padding: 15px 0 5px 0;">
+                <button id="btn-arc-prev" class="btn-page" onclick="changeArcPage(-1)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    Sebelumnya
+                </button>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div id="arc-page-info" style="font-size: 13px; font-weight: 900; color: var(--text-main);">Halaman 1 dari 1</div>
+                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; margin-top: 2px;">Navigasi Data</div>
+                </div>
+                <button id="btn-arc-next" class="btn-page" onclick="changeArcPage(1)">
+                    Selanjutnya
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENGGANTI SYSTEM CONFIRM (AGAR TIDAK DIBLOKIR BROWSER IFRAME) -->
+    <div id="modal-confirm" class="modal" style="z-index: 2000;">
+        <div class="card" style="width: 100%; max-width: 400px; text-align: center;">
+            <h3 class="font-black" style="color: var(--danger); margin-bottom: 10px; font-weight: 800;">PERINGATAN OPERASIONAL</h3>
+            <p id="confirm-msg" style="font-size: 13px; margin-bottom: 20px; line-height: 1.5;">Apakah Anda yakin?</p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeModal('modal-confirm')" class="btn" style="flex: 1; background: var(--border); color: var(--text-main);">BATAL</button>
+                <button id="btn-confirm-ok" class="btn btn-danger" style="flex: 1; background: var(--danger); color: white; border: none;">YAKIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WADAH NOTIFIKASI -->
+    <div id="toast-container"></div>
+
+    <script>
+        /* --- [09. DATABASE MASTER] --- */
+        const DATA_ASSY = ["ASSY-001-A", "ASSY-001-B", "ASSY-002-X", "ASSY-A111", "ASSY-B222", "ASSY-MANUAL-001", "ASSY-MANUAL-002", "ASSY-MANUAL-003", "ASSY-MANUAL-004", "ASSY-MANUAL-005", "ASSY-MANUAL-006", "ASSY-MANUAL-007", "ASSY-MANUAL-008", "ASSY-MANUAL-009", "ASSY-MANUAL-010", "ASSY-HL-TYPE-A", "ASSY-HL-TYPE-B", "ASSY-HL-TYPE-C", "ASSY-RR-LH-001", "ASSY-RR-RH-002", "ASSY-FR-BUMPER-01", "ASSY-FR-BUMPER-02", "ASSY-DASH-A001", "ASSY-DASH-A002", "ASSY-CONSOLE-X1", "ASSY-CONSOLE-X2", "ASSY-DOOR-FL-01", "ASSY-DOOR-FR-01", "ASSY-DOOR-RL-01", "ASSY-DOOR-RR-01", "ASSY-EXPORT-JP-01", "ASSY-EXPORT-JP-02", "ASSY-EXPORT-US-01", "ASSY-EXPORT-EU-01", "ASSY-LOCAL-D01", "ASSY-LOCAL-D02", "ASSY-SET-A-001", "ASSY-SET-A-002", "ASSY-SET-B-001", "ASSY-SET-B-002", "ASSY-SET-C-001", "ASSY-TEST-LINE1", "ASSY-TEST-LINE2", "ASSY-TEST-LINE3", "ASSY-FINAL-001", "ASSY-FINAL-002", "ASSY-FINAL-003", "ASSY-FINAL-004", "ASSY-FINAL-005", "ASSY-FINAL-006", "ASSY-FINAL-007", "ASSY-FINAL-008", "ASSY-FINAL-009", "ASSY-FINAL-010"];
+        
+        // Data referensi diubah menjadi format Rentang (Min & Max)
+        const DATA_TWIST = [
+            { min: 1, max: 300, twist: 6 },
+            { min: 301, max: 500, twist: 10 },
+            { min: 501, max: 800, twist: 16 },
+            { min: 801, max: 1000, twist: 20 },
+            { min: 1001, max: 1200, twist: 24 },
+            { min: 1201, max: 1500, twist: 30 },
+            { min: 1501, max: 2000, twist: 40 }
+        ];
+
+        const HARDCODED_USERS = [];
+        const MASTER = { 
+            assy: typeof DATA_ASSY !== 'undefined' ? DATA_ASSY : [], 
+            twist: typeof DATA_TWIST !== 'undefined' ? DATA_TWIST : [], 
+            users: [] 
+        };
+
+        let user = null, records = [], multiplier = 1, isTraining = false, editingId = null;
+        let isIntentionalExit = false, isSpectator = false;
+        
+        let consecutiveSaves = 0; 
+        let lastSavedAssy = ""; 
+        let idleScrollTimer; 
+        let activeVkInput = null;
+
+        // Variabel Paginasi Data Report
+        let arcFilteredData = []; 
+        let arcCurrentPage = 1; 
+        const ARC_PER_PAGE = 10;
+
+        // FUNGSI TOAST NOTIFICATION
+        function showToast(message, type = 'success') { 
+            const container = document.getElementById('toast-container');
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let iconSvg = '';
+            let title = '';
+            if (type === 'success') {
+                iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                title = 'BERHASIL';
+            } else if (type === 'error') {
+                iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                title = 'PERINGATAN';
+            } else {
+                iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+                title = 'INFORMASI';
+            }
+
+            toast.innerHTML = `
+                <div class="toast-icon">${iconSvg}</div>
+                <div class="toast-content">
+                    <span class="toast-title">${title}</span>
+                    <span class="toast-message">${message}</span>
+                </div>
+            `;
+            
+            container.prepend(toast);
+            
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.style.transform = 'translateX(50px)';
+                toast.style.opacity = '0';
+                setTimeout(() => { if(container.contains(toast)) toast.remove(); }, 400);
+            }, 3000); 
+        }
+
+        // --- SISTEM VIRTUAL KEYBOARD MELAYANG ---
+        function openKeyboard(inputElement) {
+            if (isSpectator) return; 
+            activeVkInput = inputElement;
+            const vk = document.getElementById('virtual-keyboard');
+            
+            const rect = inputElement.getBoundingClientRect();
+            vk.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+            
+            let leftPos = rect.left + window.scrollX;
+            if (leftPos + 360 > window.innerWidth) { 
+                leftPos = window.innerWidth - 380; 
+            }
+            vk.style.left = leftPos + 'px';
+            
+            vk.classList.add('vk-show');
+        }
+        
+        function closeKeyboard() {
+            const vk = document.getElementById('virtual-keyboard');
+            if (vk) vk.classList.remove('vk-show');
+            activeVkInput = null;
+        }
+
+        document.addEventListener('mousedown', function(e) {
+            const vk = document.getElementById('virtual-keyboard');
+            if (activeVkInput && vk && !vk.contains(e.target) && e.target !== activeVkInput) {
+                closeKeyboard();
+            }
+        });
+        document.addEventListener('touchstart', function(e) {
+            const vk = document.getElementById('virtual-keyboard');
+            if (activeVkInput && vk && !vk.contains(e.target) && e.target !== activeVkInput) {
+                closeKeyboard();
+            }
+        }, {passive: true});
+
+        function vkType(char) {
+            if (activeVkInput) {
+                activeVkInput.value += char;
+                activeVkInput.focus(); 
+                checkFormCompleteness(); 
+            }
+        }
+
+        function vkBackspace() {
+            if (activeVkInput && activeVkInput.value.length > 0) {
+                activeVkInput.value = activeVkInput.value.slice(0, -1);
+                activeVkInput.focus(); 
+                checkFormCompleteness(); 
+            }
+        }
+
+        // --- SISTEM PEMERIKSAAN FORM KELENGKAPAN ---
+        function checkFormCompleteness() {
+            if (isSpectator) return;
+            const assy = document.getElementById('in-assy').value.trim();
+            const cct1 = document.getElementById('in-cct-1').value.trim();
+            const cct2 = document.getElementById('in-cct-2').value.trim();
+            const wp = document.getElementById('in-wp').value.trim();
+            const qtyStr = document.getElementById('in-qty').value;
+            const qty = parseInt(qtyStr);
+            const btnSubmit = document.getElementById('btn-submit');
+            const qtyEl = document.getElementById('in-qty');
+
+            let isQtyValid = false;
+            if (qtyStr !== "") {
+                if (qty > 100) {
+                    qtyEl.style.color = 'var(--danger)';
+                    qtyEl.style.borderColor = 'var(--danger)';
+                    qtyEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.1)';
+                } else if (qty > 0) {
+                    qtyEl.style.color = 'var(--text-main)';
+                    qtyEl.style.borderColor = 'var(--primary)';
+                    qtyEl.style.boxShadow = '0 0 0 4px rgba(236, 72, 153, 0.15)';
+                    isQtyValid = true;
+                }
+            } else {
+                qtyEl.style.color = 'var(--text-main)';
+                qtyEl.style.borderColor = 'var(--border)';
+                qtyEl.style.boxShadow = 'none';
+            }
+
+            if (assy && cct1 && cct2 && wp && isQtyValid) {
+                btnSubmit.disabled = false;
+            } else {
+                btnSubmit.disabled = true;
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function showLoader() { document.getElementById('global-loader').classList.remove('hidden'); }
+        function hideLoader() { document.getElementById('global-loader').classList.add('hidden'); }
+
+        function executeWithLoader(taskFn) { showLoader(); setTimeout(() => { try { taskFn(); } catch (e) { console.error(e); } hideLoader(); }, 50); }
+
+        window.addEventListener('beforeunload', function (e) { if (user && user.id !== "111" && !isIntentionalExit && !isSpectator) { e.preventDefault(); e.returnValue = ''; } });
+
+        /* --- [10. LOGIKA WAKTU & TARGET (MES CORE)] --- */
+        function getLogicalDate(timestamp) {
+            const date = new Date(timestamp), jam = date.getHours(), menit = date.getMinutes();
+            if (jam < 7 || (jam === 7 && menit < 30)) { date.setDate(date.getDate() - 1); }
+            return date;
+        }
+
+        function getShiftDateISO(timestamp) {
+            const date = getLogicalDate(timestamp), y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getSessionIdentifier(timestamp) {
+            const logicalDate = getLogicalDate(timestamp), y = logicalDate.getFullYear(), m = String(logicalDate.getMonth() + 1).padStart(2, '0'), d = String(logicalDate.getDate()).padStart(2, '0');
+            const actualDate = new Date(timestamp), jam = actualDate.getHours(), menit = actualDate.getMinutes();
+            let session = "PAGI"; if (jam >= 21 || jam < 7 || (jam === 7 && menit < 30)) session = "MALAM";
+            return `${y}-${m}-${d}_${session}`;
+        }
+
+        function getTargetByProcess(prosRaw) {
+            let p = String(prosRaw).toUpperCase();
+            if (p.includes('PROJECT') || p.includes('WC')) return 2000;
+            return 3500; 
+        }
+
+        /* --- [11. INISIALISASI APLIKASI (ONLOAD)] --- */
+        window.onload = () => {
+            let dynamicUsers = []; try { dynamicUsers = JSON.parse(localStorage.getItem('dynamicUsers') || '[]'); } catch (e) {}
+            MASTER.users = [...HARDCODED_USERS, ...dynamicUsers];
+
+            document.querySelectorAll('.input').forEach(input => {
+                input.addEventListener('focus', function() { this.select(); });
+            });
+
+            const lAssy = document.getElementById('list-assy');
+            if (lAssy) { let h = ""; MASTER.assy.forEach(v => h += `<option value="${v}">`); lAssy.innerHTML = h; }
+            
+            const lTwist = document.getElementById('list-twist-len');
+            if (lTwist) { let h = ""; MASTER.twist.forEach(v => h += `<option value="${v.max}">`); lTwist.innerHTML = h; }
+
+            document.getElementById('login-form').onsubmit = (e) => {
+                e.preventDefault();
+                const u = document.getElementById('login-username').value, p = document.getElementById('login-password').value;
+                const match = MASTER.users.find(x => x.id === u && x.pass === p);
+                if(match) { isTraining = false; executeWithLoader(() => login(match)); }
+                else showToast("Lisensi ID atau Password Salah. Pastikan Admin telah membuatkan lisensi Anda.", "error");
+            };
+
+            const seq = ['in-assy', 'in-cct-1', 'in-cct-2', 'in-cut-len', 'in-wp', 'in-qty'];
+            seq.forEach((id, i) => { 
+                const el = document.getElementById(id); 
+                if (el) {
+                    el.onkeydown = (e) => { 
+                        if (e.key === 'Enter') { 
+                            e.preventDefault(); 
+                            if (id === 'in-qty') {
+                                const btnSubmit = document.getElementById('btn-submit');
+                                if (!btnSubmit.disabled) {
+                                    handleSave(); 
+                                } else {
+                                    const qtyVal = parseInt(document.getElementById('in-qty').value);
+                                    if (qtyVal > 100) showToast('Blokir Sistem: Maksimal Base Qty adalah 100!', 'error');
+                                    else showToast('Lengkapi SELURUH form (Assy, CCT1, CCT2, WP, Qty) terlebih dahulu!', 'error');
+                                }
+                            } else if (id === 'in-assy') {
+                                let val = el.value.trim().toUpperCase();
+                                if (val) {
+                                    const match = MASTER.assy.find(a => a.toUpperCase().startsWith(val) || a.toUpperCase().includes(val));
+                                    if (match) el.value = match;
+                                }
+                                if (seq[i+1]) document.getElementById(seq[i+1]).focus();
+                            } else {
+                                if (seq[i+1]) document.getElementById(seq[i+1]).focus(); 
+                            }
+                        } 
+                    }; 
+                }
+            });
+
+            setInterval(() => {
+                const now = new Date(), day = String(now.getDate()).padStart(2, '0'), monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const clockStr = `${day} ${monthNames[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('id-ID', { hour12: false })}`;
+                const clockEl = document.getElementById('ui-clock'); if (clockEl) clockEl.innerText = clockStr;
+            }, 1000);
+
+            let idleEventThrottle;
+            function handleIdleEvent() {
+                if (idleEventThrottle) return;
+                idleEventThrottle = setTimeout(() => {
+                    resetIdleScrollTimer();
+                    idleEventThrottle = null;
+                }, 500); 
+            }
+
+            ['scroll', 'mousemove', 'keydown', 'touchstart'].forEach(evt => window.addEventListener(evt, handleIdleEvent, { passive: true }));
+            resetIdleScrollTimer();
+        };
+
+        /* --- [12. ASYNC DRAG & DROP (FILE / FOLDER PARSER)] --- */
+        async function getFilesFromDataTransfer(items) {
+            let files = []; let promises = [];
+            for (let i = 0; i < items.length; i++) { let item = items[i].webkitGetAsEntry(); if (item) promises.push(traverseFileTree(item, files)); }
+            await Promise.all(promises); return files;
+        }
+
+        function traverseFileTree(item, files) {
+            return new Promise((resolve) => {
+                if (item.isFile) { item.file(file => { files.push(file); resolve(); });
+                } else if (item.isDirectory) {
+                    let dirReader = item.createReader();
+                    dirReader.readEntries(async entries => { let promises = []; for (let i = 0; i < entries.length; i++) { promises.push(traverseFileTree(entries[i], files)); } await Promise.all(promises); resolve(); });
+                } else { resolve(); }
+            });
+        }
+
+        async function handleCustomDrop(event, mode) {
+            showLoader();
+            setTimeout(async () => {
+                try { const items = event.dataTransfer.items; if (!items) { hideLoader(); return; } const files = await getFilesFromDataTransfer(items); processFiles(files, mode); } catch(e) { hideLoader(); }
+            }, 50);
+        }
+
+        function handleFileInput(event, mode) {
+            showLoader();
+            setTimeout(() => { const files = Array.from(event.target.files); if (!files.length) { hideLoader(); return; } processFiles(files, mode); event.target.value = ''; }, 50);
+        }
+
+        function processFiles(files, mode) {
+            let jsonFiles = files.filter(f => f.name.endsWith('.json'));
+            if (jsonFiles.length === 0) { hideLoader(); showToast("Peringatan: Tidak ada file JSON yang ditemukan.", "error"); return; }
+
+            let filesRead = 0;
+            if (mode === 'sync') {
+                let loadedUsers = [];
+                jsonFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try { const json = JSON.parse(e.target.result); if (json.id && json.name && json.pass && !Array.isArray(json)) loadedUsers.push(json); } catch(err) {}
+                        filesRead++;
+                        if (filesRead === jsonFiles.length) {
+                            try { localStorage.setItem('dynamicUsers', JSON.stringify(loadedUsers)); MASTER.users = [...HARDCODED_USERS, ...loadedUsers]; closeModal('modal-import-license'); showToast(`Berhasil mensinkronisasi! Sebanyak ${loadedUsers.length} Lisensi MP terdaftar.`, 'success');
+                            } catch(err) { MASTER.users = [...HARDCODED_USERS, ...loadedUsers]; closeModal('modal-import-license'); }
+                            hideLoader();
+                        }
+                    }; reader.readAsText(file);
+                });
+            }
+        }
+
+        /* --- [13. LOGIKA OPERATOR (MANPOWER)] --- */
+        function login(data) {
+            user = { ...data }; isSpectator = false; document.getElementById('login-page').classList.add('hidden'); 
+            
+            document.getElementById('app-page').classList.remove('hidden');
+            document.getElementById('ui-user').innerText = user.name.toUpperCase(); document.getElementById('ui-shift').innerText = user.shift; 
+            
+            if(isTraining && !user.pros) user.pros = "SIMULASI";
+
+            const prosSelect = document.getElementById('ui-proses');
+            if (!Array.from(prosSelect.options).some(opt => opt.value === user.pros)) { prosSelect.add(new Option(user.pros, user.pros)); }
+            prosSelect.value = user.pros;
+            
+            const storageKey = `mp_records_cache_${user.id}`;
+            if (!isTraining) { 
+                try { let cachedRecords = JSON.parse(localStorage.getItem(storageKey)) || []; const now = Date.now(); records = cachedRecords.filter(r => (now - new Date(r.time).getTime()) < 172800000); } catch (e) { records = []; } 
+            } else { records = []; } 
+            
+            reactivateInputs(); refreshUI(); 
+            document.getElementById('in-assy').focus(); 
+            
+            showToast(`Selamat datang di shift ini, ${user.name.toUpperCase()}!`, 'info');
+        }
+
+        function reactivateInputs() {
+            ['in-assy', 'in-cct-1', 'in-cct-2', 'in-cut-len', 'in-wp', 'in-qty'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = false;
+            });
+            
+            document.getElementById('btn-submit').innerText = "SIMPAN DATA (ENTER)"; 
+            document.getElementById('btn-submit').className = "btn btn-primary"; 
+            document.getElementById('btn-end-shift').classList.remove('hidden'); 
+            document.getElementById('spectator-warning').classList.add('hidden');
+            checkFormCompleteness();
+        }
+
+        function activateSpectatorMode() {
+            isSpectator = true;
+            ['in-assy', 'in-cct-1', 'in-cct-2', 'in-cut-len', 'in-wp', 'in-qty'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+            
+            const btnSubmit = document.getElementById('btn-submit');
+            btnSubmit.innerText = "SHIFT BERAKHIR (TERKUNCI)"; 
+            btnSubmit.className = "btn"; 
+            btnSubmit.style.background = 'var(--border)'; 
+            btnSubmit.style.color = 'var(--text-muted)';
+            
+            document.getElementById('btn-end-shift').classList.add('hidden'); 
+            document.getElementById('spectator-warning').classList.remove('hidden');
+            const actionBtns = document.querySelectorAll('.btn-edit, .btn-delete-row'); actionBtns.forEach(btn => btn.classList.add('hidden'));
+            closeKeyboard();
+        }
+
+        function processEndShift(shiftRecords, currentSession) {
+            showLoader();
+            setTimeout(() => {
+                const dataStr = JSON.stringify(shiftRecords, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob);
+                const dateOnly = currentSession.split('_')[0]; const fileName = `${user.name.replace(/\s+/g, '_')}_${dateOnly}.json`;
+                const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+                
+                setTimeout(() => {
+                    activateSpectatorMode();
+                    hideLoader();
+                    showToast('Shift diakhiri. Data diamankan.', 'success');
+                }, 2000);
+            }, 50);
+        }
+
+        function endShift() {
+            const currentSession = getSessionIdentifier(new Date()); 
+            const shiftRecords = records.filter(r => getSessionIdentifier(r.time) === currentSession);
+            
+            if(shiftRecords.length === 0) {
+                showToast("Belum ada data produksi yang bisa di-save di sesi shift ini.", "error");
+                return;
+            }
+
+            document.getElementById('confirm-msg').innerText = "Apakah Anda yakin ingin mengakhiri shift dan mengunduh laporan? \n\nSistem akan masuk ke Mode Pengamat (Spectator Mode). Anda TIDAK AKAN BISA memasukkan data baru lagi untuk mencegah penyimpanan ganda.";
+            document.getElementById('btn-confirm-ok').onclick = () => {
+                closeModal('modal-confirm');
+                processEndShift(shiftRecords, currentSession);
+            };
+            openModal('modal-confirm');
+        }
+
+        function logout() { isIntentionalExit = true; location.reload(); }
+        function changeProcess(newPros) { user.pros = newPros; refreshUI(); }
+        function startTraining() { openModal('modal-training'); document.getElementById('in-training-name').focus(); }
+        function submitTrainingName() { let tName = document.getElementById('in-training-name').value.trim(); if (!tName) tName = "PESERTA TRAINING"; isTraining = true; closeModal('modal-training'); executeWithLoader(() => login({ id: "TRAINING", name: tName + " (TRN)", shift: "T", kat: "EDU", pros: "SIMULASI" })); }
+        
+        function validateTwistLength(val) {
+            if (isSpectator) return;
+            const twistUI = document.getElementById('ui-twist-count');
+            if (!val) {
+                twistUI.innerText = '-';
+                twistUI.style.color = 'var(--primary)';
+                return;
+            }
+            
+            const numVal = parseInt(val);
+            
+            // Logika pencarian rentang: memeriksa apakah nilai input berada di antara batas min dan max
+            const match = MASTER.twist.find(t => numVal >= t.min && numVal <= t.max);
+            
+            if (match) {
+                twistUI.innerText = match.twist + " Putaran";
+                twistUI.style.color = 'var(--success)';
+            } else {
+                twistUI.innerText = 'TIDAK ADA DATA';
+                twistUI.style.color = 'var(--danger)';
+            }
+        }
+
+        function clearInputs() { 
+            // Bersihkan semua input form data
+            ['in-assy', 'in-cct-1', 'in-cct-2', 'in-wp', 'in-qty', 'in-cut-len'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            }); 
+            
+            validateTwistLength('');
+            consecutiveSaves = 0;
+            lastSavedAssy = "";
+            checkFormCompleteness();
+            
+            const assyInput = document.getElementById('in-assy');
+            if (assyInput && !assyInput.disabled) {
+                assyInput.focus();
+            }
+        }
+
+        function handleSave() {
+            if (isSpectator) return; 
+            
+            const baseQty = parseInt(document.getElementById('in-qty').value);
+            // KALI 2 SESUAI INSTRUKSI
+            const finalQty = baseQty * 2;
+            
+            const data = { 
+                assy: document.getElementById('in-assy').value.trim(), 
+                cct1: document.getElementById('in-cct-1').value.trim(), 
+                cct2: document.getElementById('in-cct-2').value.trim(), 
+                wp: document.getElementById('in-wp').value.trim(), 
+                qty: finalQty, // Simpan qty yang sudah dikali
+                time: new Date().toISOString(), 
+                userId: user.id, 
+                userName: user.name, 
+                userShift: user.shift, 
+                userPros: user.pros 
+            };
+            
+            if (!data.assy || !data.qty) return;
+
+            // Circuit Breaker: Lacak Input Berulang Berdasarkan Assy No (WOS)
+            if (data.assy === lastSavedAssy && !editingId) {
+                consecutiveSaves += multiplier; 
+            } else {
+                consecutiveSaves = multiplier; 
+                lastSavedAssy = data.assy;
+            }
+
+            if (editingId) { 
+                const index = records.findIndex(r => r.id === editingId); 
+                if (index !== -1) { 
+                    data.id = editingId; 
+                    data.time = records[index].time; 
+                    records[index] = data; 
+                } 
+                editingId = null; 
+            } else { 
+                for (let i = 0; i < multiplier; i++) records.unshift({ ...data, id: Date.now() + i }); 
+            }
+            
+            multiplier = 1; 
+            document.getElementById('ui-multiplier').innerText = ''; 
+            
+            document.getElementById('btn-submit').innerText = "SIMPAN DATA (ENTER)"; 
+            document.getElementById('btn-submit').className = "btn btn-primary"; 
+            document.getElementById('ui-form-title').innerText = "📝 Data Produksi Twist"; 
+            document.getElementById('ui-form-title').style.color = "var(--primary)"; 
+            document.getElementById('btn-cancel-edit').classList.add('hidden'); 
+            
+            if (!isTraining) localStorage.setItem(`mp_records_cache_${user.id}`, JSON.stringify(records));
+            refreshUI();
+
+            if (consecutiveSaves >= 50) {
+                clearInputs();
+                showToast('Circuit Breaker (50x): Form di-reset penuh untuk MENCEGAH KELELAHAN. Silakan scan dokumen WOS baru!', 'info');
+            } else {
+                // HANYA KOSONGKAN CCT 1, CCT 2, dan QTY & CUTTING LENGTH
+                document.getElementById('in-cct-1').value = ''; 
+                document.getElementById('in-cct-2').value = ''; 
+                document.getElementById('in-qty').value = ''; 
+                document.getElementById('in-cut-len').value = ''; 
+                validateTwistLength('');
+                
+                checkFormCompleteness(); 
+                document.getElementById('in-cct-1').focus(); // LANGSUNG FOKUS KE CCT 1
+                
+                showToast(`Data berhasil disimpan! (Qty ${baseQty} otomatis dikali 2 menjadi ${finalQty})`, 'success');
+            }
+            closeKeyboard();
+        }
+
+        function startEdit(id) {
+            if(isSpectator) return;
+            const record = records.find(r => r.id === id); if (!record) return; editingId = id;
+            
+            document.getElementById('in-assy').value = record.assy; 
+            document.getElementById('in-cct-1').value = record.cct1; 
+            document.getElementById('in-cct-2').value = record.cct2; 
+            document.getElementById('in-wp').value = record.wp; 
+            // Untuk edit, tampilkan kembali qty / 2 agar operator tidak bingung.
+            // Karena saat dia menekan Enter/Update, sistem akan mengkali 2 lagi.
+            document.getElementById('in-qty').value = Math.round(record.qty / 2);
+            
+            document.getElementById('ui-form-title').innerText = "⚠ MODE EDIT DATA"; 
+            document.getElementById('ui-form-title').style.color = "var(--warning)"; 
+            document.getElementById('btn-submit').innerText = "UPDATE DATA"; 
+            document.getElementById('btn-submit').className = "btn btn-update"; 
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            
+            document.getElementById('in-cct-1').focus(); 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function cancelEdit() { 
+            editingId = null; 
+            document.getElementById('btn-submit').innerText = "SIMPAN DATA (ENTER)"; 
+            document.getElementById('btn-submit').className = "btn btn-primary"; 
+            document.getElementById('ui-form-title').innerText = "📝 Data Produksi Twist"; 
+            document.getElementById('ui-form-title').style.color = "var(--primary)"; 
+            document.getElementById('btn-cancel-edit').classList.add('hidden'); 
+            clearInputs(); 
+        }
+        
+        function deleteLog(id) { 
+            if(isSpectator) return;
+            executeWithLoader(() => { records = records.filter(r => r.id !== id); if (!isTraining) localStorage.setItem(`mp_records_cache_${user.id}`, JSON.stringify(records)); refreshUI(); });
+        }
+
+        function refreshUI() {
+            const currentSession = getSessionIdentifier(new Date()); 
+            const shiftRecords = records.filter(r => getSessionIdentifier(r.time) === currentSession);
+            const total = shiftRecords.reduce((s, r) => s + Number(r.qty), 0), target = getTargetByProcess(user.pros);
+            const targetHourly = Math.round(target / 8);
+            
+            const percent = Math.round((total / target) * 100);
+            const displayPercent = percent + '%';
+            const barWidth = Math.min(100, percent) + '%'; 
+            
+            document.getElementById('ui-total').innerText = total; 
+            document.getElementById('ui-target').innerText = target;
+            document.getElementById('ui-target-hourly').innerText = targetHourly;
+            document.getElementById('ui-gap').innerText = total >= target ? "OK" : (total - target); document.getElementById('ui-gap').style.color = total >= target ? 'var(--success)' : 'var(--danger)';
+            document.getElementById('ui-percent').innerText = displayPercent; 
+            document.getElementById('ui-progress-bar').style.width = barWidth; 
+            
+            if(percent >= 100) { document.getElementById('ui-progress-bar').style.background = 'var(--success)'; document.getElementById('ui-percent').style.color = 'var(--success)'; }
+            else { document.getElementById('ui-progress-bar').style.background = 'linear-gradient(90deg, var(--primary), var(--accent))'; document.getElementById('ui-percent').style.color = 'var(--primary)'; }
+            
+            document.getElementById('ui-count').innerText = shiftRecords.length + ' WOS';
+
+            const body = document.getElementById('main-table-body'); 
+            
+            let htmlBatch = ''; 
+            const renderLimit = Math.min(shiftRecords.length, 30); 
+            
+            for (let i = 0; i < renderLimit; i++) {
+                const r = shiftRecords[i];
+                let actionBtns = `<button onclick="startEdit(${r.id})" class="btn btn-edit ${isSpectator ? 'hidden' : ''}">EDIT</button><button onclick="deleteLog(${r.id})" class="btn btn-delete-row ${isSpectator ? 'hidden' : ''}">HAPUS</button>`;
+                htmlBatch += `<tr>
+                    <td style="font-weight:700; color:var(--text-main);">${r.assy}</td>
+                    <td style="color:var(--accent);">${r.cct1}</td>
+                    <td style="color:var(--accent);">${r.cct2}</td>
+                    <td>${r.wp}</td>
+                    <td style="text-align:center; font-weight:900; color:var(--primary); font-size:15px;">${r.qty}</td>
+                    <td style="font-size:11px; opacity:0.7;">${new Date(r.time).toLocaleTimeString()}</td>
+                    <td style="text-align:right; white-space:nowrap;">${actionBtns}</td>
+                </tr>`; 
+            }
+            
+            if (shiftRecords.length > 30) {
+                htmlBatch += `<tr><td colspan="7" style="text-align:center; font-size:11px; opacity:0.5; padding: 15px;">... ${shiftRecords.length - 30} data terdahulu disembunyikan agar komputer tetap ringan ...</td></tr>`;
+            }
+            
+            body.innerHTML = htmlBatch; 
+        }
+
+        function openMultiplier(e) { if (e) e.preventDefault(); openModal('modal-mul'); document.getElementById('in-mul').focus(); }
+        function applyMultiplier() { multiplier = parseInt(document.getElementById('in-mul').value) || 1; document.getElementById('ui-multiplier').innerText = multiplier > 1 ? `(x${multiplier})` : ''; closeModal('modal-mul'); }
+        
+        function openArchive(show) { 
+            if(show) { 
+                openModal('modal-arc'); 
+                document.getElementById('arc-date').value = getShiftDateISO(new Date()); 
+                executeWithLoader(renderArchiveTable); 
+            } else { 
+                closeModal('modal-arc'); 
+            } 
+        }
+
+        function renderArchiveTable() { 
+            const targetStr = document.getElementById('arc-date').value; if (!targetStr) return;
+            const filtered = records.filter(r => { return getShiftDateISO(r.time) === targetStr; }); 
+            filtered.sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            arcFilteredData = filtered;
+            arcCurrentPage = 1;
+            
+            document.getElementById('arc-total').innerText = filtered.reduce((s, r) => s + Number(r.qty), 0); 
+            document.getElementById('arc-wos-count').innerText = filtered.length + ' WOS';
+            
+            displayArcPage();
+        }
+
+        function displayArcPage() {
+            const body = document.getElementById('archive-table-body'); 
+            const paginationUI = document.getElementById('arc-pagination');
+            if (!body) return; body.innerHTML = ''; 
+            
+            if(arcFilteredData.length === 0) { 
+                body.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; opacity: 0.5;">Tidak ada riwayat pada tanggal ini.</td></tr>'; 
+                paginationUI.classList.add('hidden');
+                return; 
+            } 
+            
+            paginationUI.classList.remove('hidden');
+            const startIndex = (arcCurrentPage - 1) * ARC_PER_PAGE;
+            const endIndex = startIndex + ARC_PER_PAGE;
+            const paginatedItems = arcFilteredData.slice(startIndex, endIndex);
+
+            let arcHtmlBatch = ''; 
+            paginatedItems.forEach(r => { 
+                arcHtmlBatch += `<tr>
+                    <td style="font-weight:700; color:var(--text-main);">${r.assy}</td>
+                    <td style="color:var(--accent);">${r.cct1}</td>
+                    <td style="color:var(--accent);">${r.cct2}</td>
+                    <td>${r.wp}</td>
+                    <td style="text-align:center; font-weight:900; color:var(--primary); font-size:15px;">${r.qty}</td>
+                    <td style="font-size:11px; opacity:0.7;">${new Date(r.time).toLocaleString('id-ID')}</td>
+                </tr>`; 
+            });
+            body.innerHTML = arcHtmlBatch;
+            
+            const totalPages = Math.ceil(arcFilteredData.length / ARC_PER_PAGE) || 1;
+            document.getElementById('arc-page-info').innerText = `Halaman ${arcCurrentPage} dari ${totalPages}`;
+            document.getElementById('btn-arc-prev').disabled = arcCurrentPage === 1;
+            document.getElementById('btn-arc-next').disabled = arcCurrentPage === totalPages;
+        }
+
+        function exportArchiveJSON() {
+            const targetStr = document.getElementById('arc-date').value; if (!targetStr) { showToast("Pilih tanggal terlebih dahulu.", "error"); return; }
+            const filtered = records.filter(r => getShiftDateISO(r.time) === targetStr); if(filtered.length === 0) { showToast("Tidak ada data untuk diunduh pada tanggal tersebut.", "error"); return; }
+            const dataStr = JSON.stringify(filtered, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob);
+            const fileName = `${user.name.replace(/\s+/g, '_')}_${targetStr}.json`; const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+        }
+
+        function resetIdleScrollTimer() {
+            if (isSpectator) return; 
+            clearTimeout(idleScrollTimer);
+            
+            idleScrollTimer = setTimeout(() => {
+                if (window.scrollY > 150) { 
+                    smoothScrollToTop(1200); 
+                }
+            }, 15000); 
+        }
+
+        function smoothScrollToTop(duration) {
+            const startPosition = window.pageYOffset;
+            const startTime = performance.now();
+
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function animation(currentTime) {
+                const timeElapsed = currentTime - startTime;
+                let progress = timeElapsed / duration;
+                if (progress > 1) progress = 1;
+
+                const easeProgress = easeInOutCubic(progress);
+                window.scrollTo(0, startPosition * (1 - easeProgress));
+
+                if (progress < 1) {
+                    requestAnimationFrame(animation);
+                } else {
+                    const cct1Input = document.getElementById('in-cct-1');
+                    const assyInput = document.getElementById('in-assy');
+                    
+                    if (cct1Input && !cct1Input.disabled && cct1Input.value === '') {
+                        cct1Input.focus();
+                    } else if (assyInput && !assyInput.disabled) {
+                        assyInput.focus();
+                    }
+                }
+            }
+            requestAnimationFrame(animation);
+        }
+    </script>
+</body>
+</html>
