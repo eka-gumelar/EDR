@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem ERP - Enterprise Resource Planning</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><line x1='10' y1='9' x2='8' y2='9'/></svg>">
+    <style>
+        /* --- [01. TEMA GLOBAL SAAS ENTERPRISE] --- */
+        :root {
+            --bg-body: #f4f7f9; 
+            --bg-card: #ffffff;
+            --bg-sidebar: #0f172a; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --text-sidebar: #94a3b8;
+            --text-sidebar-active: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --border: #e2e8f0;
+            --border-dark: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-size: 13.5px; 
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- [02. ARSITEKTUR SIDEBAR] --- */
+        #sidebar {
+            width: 260px; 
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-dark);
+            z-index: 100;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        #sidebar.collapsed { width: 76px; }
+
+        .sidebar-logo {
+            padding: 20px 24px; 
+            border-bottom: 1px solid var(--border-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-size: 16px; 
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .logo-text { transition: opacity 0.2s, width 0.2s; white-space: nowrap; overflow: hidden; display: flex; align-items: center; gap: 12px; }
+        #sidebar.collapsed .logo-text { opacity: 0; width: 0; }
+
+        .btn-toggle-sidebar {
+            background: transparent; border: none; color: var(--text-sidebar); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 6px; transition: 0.2s;
+        }
+        .btn-toggle-sidebar:hover { background: rgba(255,255,255,0.1); color: white; }
+        #sidebar.collapsed .btn-toggle-sidebar { transform: rotate(180deg); }
+
+        .sidebar-menu { padding: 24px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
+        
+        .sidebar-menu::-webkit-scrollbar { width: 4px; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .menu-label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 8px 12px; white-space: nowrap; transition: opacity 0.2s; }
+        #sidebar.collapsed .menu-label { opacity: 0; height: 0; margin: 0; }
+
+        .menu-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 14px; color: var(--text-sidebar); font-weight: 600; font-size: 13.5px; transition: all 0.2s; white-space: nowrap; }
+        .menu-item:hover { background-color: rgba(255, 255, 255, 0.05); color: var(--text-sidebar-active); }
+        .menu-item.active { background-color: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); }
+        .menu-text { transition: opacity 0.2s, width 0.2s; }
+        #sidebar.collapsed .menu-text { opacity: 0; width: 0; }
+        #sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+        .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .dept-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.7;}
+
+        #main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-body); }
+
+        /* --- [03. NAVIGASI HEADER & SUB-NAV SECTIONS] --- */
+        nav { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 50; }
+        .nav-title { font-size: 16px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .clock-display { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-muted); font-size: 13px; }
+
+        /* TABS UNTUK REKAP / LEADERBOARD / TRACING */
+        .sub-nav { display: flex; gap: 10px; background: var(--bg-card); padding: 12px 32px; border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
+        .sub-btn { background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 8px;}
+        .sub-btn:hover { background: #f1f5f9; color: var(--text-main); border-color: #cbd5e1; }
+        .sub-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3); }
+
+        .module-content { flex: 1; overflow-y: auto; padding: 32px; display: block; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+        /* --- [04. KOMPONEN UI DASAR] --- */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); display: block; margin-bottom: 24px;}
+        .label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.04em;}
+        .input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-size: 13.5px; outline: none; transition: 0.2s; }
+        .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); background: var(--bg-card); }
+        
+        .btn { cursor: pointer; border: none; border-radius: 8px; padding: 10px 18px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; font-size: 13.5px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 1px 2px rgba(37,99,235,0.1); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); }
+        .btn-update { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-update:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+
+        /* Filter Cepat */
+        .filter-group { display: flex; gap: 6px; align-items: center; background: var(--bg-body); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
+        .btn-quick { background: transparent; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-quick:hover { background: var(--bg-card); color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .input-quick { background: transparent; border: none; padding: 6px 24px 6px 8px; font-size: 12.5px; font-weight: 700; color: var(--text-main); cursor: pointer; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; }
+        .input-quick:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* --- [05. MATRIKS ADMIN (REKAP TABEL) CSS] --- */
+        .table-container { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg-card); width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .table-monitor { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .table-monitor th, .table-monitor td { box-sizing: border-box; padding: 12px 16px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: center; white-space: nowrap; font-size: 13px; transition: background-color 0.15s; }
+        .table-monitor tbody tr:hover td { background-color: #f8fafc; }
+        .table-monitor th { background: #f8fafc; position: sticky; top: 0; z-index: 10; color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; font-weight: 700; border-bottom: 2px solid var(--border); }
+        .table-monitor .freeze-col { position: sticky; left: 0; background: var(--bg-card); z-index: 11; font-weight: 600; text-align: left; color: var(--text-main); border-right: 2px solid var(--border); min-width: 160px;}
+        .table-monitor th.freeze-col { z-index: 12; background: #f8fafc; }
+        .table-monitor .col-fixed { width: 90px; min-width: 90px; max-width: 90px; overflow: hidden; }
+        .table-monitor .freeze-col-total { position: sticky; right: 0; background: #f8fafc; z-index: 11; font-weight: 800; text-align: center; color: var(--primary); border-left: 2px solid var(--border); min-width: 90px; }
+        .table-monitor th.freeze-col-total { z-index: 12; color: var(--text-muted); }
+
+        .horizontal-scroll { overflow-x: auto; display: block; width: 100%; }
+        .horizontal-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .horizontal-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .horizontal-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* --- [06. MICRO-CHARTS GRID (SPARKLINES)] --- */
+        .micro-chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .micro-chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; }
+        .micro-chart-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(37,99,235,0.08); transform: translateY(-2px); }
+        .mc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;}
+        .mc-name { font-weight: 700; font-size: 13.5px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;}
+        .mc-total { font-weight: 800; font-size: 13px; color: var(--primary); background: rgba(37,99,235,0.08); padding: 4px 8px; border-radius: 6px;}
+        .mc-svg-container { width: 100%; height: 50px; }
+
+        /* --- [07. LEADERBOARD KINERJA CSS] --- */
+        .lb-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 10px; }
+        .lb-col { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .lb-header { padding: 20px; border-bottom: 1px solid var(--border); text-align: center; background: #f8fafc; }
+        .lb-header-title { font-weight: 800; font-size: 14.5px; color: var(--text-main); margin-top: 8px; }
+        .lb-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; max-height: 420px; }
+        .lb-item { display: flex; align-items: center; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s; cursor: pointer; background: var(--bg-card); }
+        .lb-item:hover { transform: translateY(-2px); border-color: #93c5fd; box-shadow: 0 4px 12px rgba(37,99,235,0.08); }
+        .lb-rank { width: 36px; font-weight: 800; font-size: 15px; color: var(--text-muted); text-align: center; margin-right: 12px; }
+        .lb-rank.gold { font-size: 24px; text-shadow: 0 2px 4px rgba(250, 204, 21, 0.3); }
+        .lb-rank.silver { font-size: 24px; text-shadow: 0 2px 4px rgba(148, 163, 184, 0.3); }
+        .lb-rank.bronze { font-size: 24px; text-shadow: 0 2px 4px rgba(180, 83, 9, 0.3); }
+        .lb-name { flex: 1; font-weight: 600; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lb-score { font-weight: 800; font-size: 16px; text-align: right; }
+        .lb-unit { font-size: 10px; color: var(--text-muted); text-transform: uppercase; display: block; line-height: 1; margin-top: 2px;}
+
+        /* --- [08. TRACING TABLE] --- */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border-top: 1px solid var(--border); }
+        .btn-page { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main); }
+        .btn-page:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #admin-view-tracing table { border-collapse: collapse; width: 100%; }
+        #admin-view-tracing th { padding: 14px 16px; border-bottom: 2px solid var(--border); background: #f1f5f9; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; text-align: left; }
+        #admin-trace-table-body td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+
+        /* --- [09. MODAL & UTILITAS] --- */
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
+        .btn-help { background: #f1f5f9; color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); margin-left: 8px; }
+        .btn-help:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; background: #f8fafc; transition: all 0.2s ease; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1;}
+        .drop-zone:hover { border-color: var(--primary); background: rgba(37, 99, 235, 0.02); }
+
+        /* LOADING PROGRESS ALGORITHM */
+        #global-loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .progress-wrapper { width: 300px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin: 16px 0; }
+        #loader-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.1s linear; }
+        
+        @keyframes gentleFadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .empty-state { padding: 80px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-muted); }
+        .empty-state svg { color: #cbd5e1; width: 48px; height: 48px; stroke-width: 1.5; }
+        .empty-state-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;}
+        
+        /* Toggle Switch */
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+    </style>
+</head>
+<body id="main-body">
+
+    <!-- LOADING PROGRESS METER -->
+    <div id="global-loader" class="hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; animation: gentleFadeUp 1s infinite alternate;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        <div class="progress-wrapper"><div id="loader-bar"></div></div>
+        <div id="loader-pct" style="font-weight: 800; color: var(--text-main); font-size: 18px;">0%</div>
+        <div id="loader-text" style="font-weight: 600; color: var(--text-muted); font-size: 13px; margin-top: 4px;">Sinkronisasi Data...</div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-text">
+                <svg xmlns='http://www.w3.org/2000/svg' width="24" height="24" viewBox='0 0 24 24' fill='none' stroke='var(--primary)' stroke-width='2.5' stroke-linecap="round" stroke-linejoin="round"><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><line x1='10' y1='9' x2='8' y2='9'/></svg>
+                <span>Sistem ERP</span>
+            </div>
+            <button onclick="toggleSidebar()" class="btn-toggle-sidebar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-label">Menu Eksekutif</div>
+            <div class="menu-item active" data-target="dashboard" onclick="switchMainSidebar('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="menu-text">Beranda Utama</span>
+            </div>
+            <div class="menu-item" data-target="pengaturan" onclick="switchMainSidebar('pengaturan')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="menu-icon"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                <span class="menu-text">Data Warehouse</span>
+            </div>
+            
+            <div class="menu-label">Lantai Produksi (Dept)</div>
+            <div class="menu-item" data-target="ACC" onclick="openDepartment('ACC')">
+                <div class="dept-dot" style="color: #3b82f6;"></div><span class="menu-text">Area ACC</span>
+            </div>
+            <div class="menu-item" data-target="MARKER" onclick="openDepartment('MARKER')">
+                <div class="dept-dot" style="color: #ef4444;"></div><span class="menu-text">Area MARKER</span>
+            </div>
+            <div class="menu-item" data-target="HEATGUN MARKER" onclick="openDepartment('HEATGUN MARKER')">
+                <div class="dept-dot" style="color: #f59e0b;"></div><span class="menu-text">Area HEATGUN MARKER</span>
+            </div>
+            <div class="menu-item" data-target="GULUNG" onclick="openDepartment('GULUNG')">
+                <div class="dept-dot" style="color: #10b981;"></div><span class="menu-text">Area GULUNG</span>
+            </div>
+            <div class="menu-item" data-target="TWIST" onclick="openDepartment('TWIST')">
+                <div class="dept-dot" style="color: #8b5cf6;"></div><span class="menu-text">Area TWIST</span>
+            </div>
+            <div class="menu-item" data-target="HEATGUN" onclick="openDepartment('HEATGUN')">
+                <div class="dept-dot" style="color: #ec4899;"></div><span class="menu-text">Area HEATGUN</span>
+            </div>
+        </div>
+    </aside>
+    
+    <div id="main-wrapper">
+        <nav>
+            <div class="nav-title" id="top-nav-title">Beranda Utama</div>
+            <div class="clock-display" id="ui-admin-clock">Memuat waktu...</div>
+        </nav>
+
+        <!-- [SUB-NAV] HANYA MUNCUL SAAT DEPARTMENT DIPILIH -->
+        <div id="dept-sub-nav" class="sub-nav hidden">
+            <button class="sub-btn active" id="tab-btn-rekap" onclick="switchDeptTab('rekap')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Rekap Output
+            </button>
+            <button class="sub-btn" id="tab-btn-skill" onclick="switchDeptTab('skill')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Leaderboard
+            </button>
+            <button class="sub-btn" id="tab-btn-tracing" onclick="switchDeptTab('tracing')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Transaksi WOS
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MODUL 1: DASHBOARD UTAMA                   -->
+        <!-- ========================================== -->
+        <main id="module-dashboard" class="module-content">
+            <div style="max-width: 1000px; width: 100%; margin: 0 auto; animation: gentleFadeUp 0.6s ease-out forwards; padding-top: 20px;">
+                <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 40px; background: var(--bg-card); padding: 32px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="width: 80px; height: 80px; background: rgba(37,99,235,0.08); border-radius: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(37,99,235,0.15); flex-shrink: 0;">
+                        <svg xmlns='http://www.w3.org/2000/svg' width="36" height="36" viewBox='0 0 24 24' fill='none' stroke='var(--primary)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    </div>
+                    <div>
+                        <h1 style="font-size: 28px; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em; margin: 0 0 8px 0;">Sistem Analitik ERP</h1>
+                        <p style="color: var(--text-muted); font-size: 14.5px; line-height: 1.6; margin: 0;">Pilih departemen di menu samping atau gunakan tombol cepat di bawah untuk mengelola Data Warehouse operasional Anda.</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div class="card" style="cursor: pointer; padding: 24px; transition: 0.2s;" onclick="switchMainSidebar('pengaturan')" onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='none'">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <div style="background: rgba(37,99,235,0.08); color: var(--primary); padding: 10px; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></div>
+                            <h3 style="font-weight: 800; font-size: 16px;">Data Warehouse</h3>
+                        </div>
+                        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Upload data JSON, Auto-Clean, dan Export Database Lokal yang tangguh.</p>
+                    </div>
+                    <div class="card" style="cursor: pointer; padding: 24px; transition: 0.2s;" onclick="openDepartment('ACC')" onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='none'">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <div style="background: rgba(16,185,129,0.08); color: var(--success); padding: 10px; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+                            <h3 style="font-weight: 800; font-size: 16px;">Lihat Departemen</h3>
+                        </div>
+                        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Buka langsung evaluasi matriks dan analitik untuk Bagian ACC.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- MODUL 2: PENGATURAN (DATA WAREHOUSE)       -->
+        <!-- ========================================== -->
+        <main id="module-pengaturan" class="module-content hidden">
+            <div style="max-width: 900px; margin: 0 auto; width: 100%; animation: gentleFadeUp 0.4s ease-out forwards;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+                    <div>
+                        <h2 style="font-weight: 800; font-size: 22px; color: var(--text-main); margin-bottom: 8px;">Pengaturan & Data Warehouse</h2>
+                        <p style="font-size: 14px; color: var(--text-muted); margin: 0;">Unggah data laporan harian ke dalam <b>IndexedDB</b> (skalabilitas ratusan ribu entri).</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Kapasitas Database Internal</div>
+                        <div id="ui-memory-status" style="font-size: 18px; font-weight: 800; color: var(--primary);">0 Transaksi</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--primary);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <h3 style="font-weight: 700; font-size: 16px; color: var(--text-main); margin: 0;">Injeksi Data WOS</h3>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <!-- Opsi 1: Upload Banyak File Biasa -->
+                        <div class="drop-zone" onclick="document.getElementById('upload-files').click()" ondragover="event.preventDefault(); this.classList.add('active');" ondragleave="this.classList.remove('active');" ondrop="event.preventDefault(); this.classList.remove('active'); handleFileDrop(event, false);">
+                            <input type="file" id="upload-files" accept=".json" multiple onchange="handleFileSelect(event)" class="hidden">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; color: var(--text-muted); margin-bottom: 8px;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                            <h4 style="font-weight: 700; margin: 0 0 4px 0; color: var(--text-main); font-size: 14.5px;">Unggah Multiple File</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Pilih file .json secara spesifik.</p>
+                        </div>
+
+                        <!-- Opsi 2: Upload 1 Folder Penuh -->
+                        <div class="drop-zone" onclick="document.getElementById('upload-folder').click()" ondragover="event.preventDefault(); this.classList.add('active');" ondragleave="this.classList.remove('active');" ondrop="event.preventDefault(); this.classList.remove('active'); handleFileDrop(event, true);">
+                            <input type="file" id="upload-folder" webkitdirectory directory multiple onchange="handleFileSelect(event)" class="hidden">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px; color: var(--text-muted); margin-bottom: 8px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                            <h4 style="font-weight: 700; margin: 0 0 4px 0; color: var(--text-main); font-size: 14.5px;">Pindai Folder Penuh</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Pilih folder untuk memuat semua isinya.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.46-5.46"></path></svg>
+                        <h3 style="font-weight: 700; font-size: 16px; color: var(--text-main); margin: 0;">Otomasi Pemeliharaan Data (Auto-Clean)</h3>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Hapus Transaksi Kedaluwarsa Otomatis</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Sistem akan menghapus data yang lebih tua dari <b>90 hari</b> secara otomatis setiap kali web dimuat.</div>
+                        </div>
+                        <label class="toggle-switch"><input type="checkbox" id="setting-autoclean" onchange="toggleAutoClean(this)"><span class="slider"></span></label>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; gap: 12px;">
+                        <button onclick="exportDatabaseBackup()" class="btn btn-primary" style="padding: 8px 16px; font-size: 12.5px;">Unduh Backup Database</button>
+                        <button onclick="discardAdminData()" class="btn btn-danger" style="margin-left:auto; padding: 8px 16px; font-size: 12.5px;">Kosongkan Seluruh Database</button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- MODUL 3: PRODUKSI (DENGAN TABS DEPARTEMEN) -->
+        <!-- ========================================== -->
+        <main id="module-produksi" class="module-content hidden">
+
+            <!-- FILTER GLOBAL UNTUK SELURUH VIEW DI DALAM DEPARTEMEN -->
+            <div class="card" style="padding: 20px; margin-bottom: 24px;">
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div class="filter-group">
+                        <button class="btn-quick" onclick="applyQuickFilter('today')">Hari Terakhir</button>
+                        <button class="btn-quick" onclick="applyQuickFilter('all')">Semua Waktu</button>
+                        <div style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
+                        <select id="filter-month" class="input-quick" onchange="handleMonthChange(this.value)"><option value="">Bulan</option></select>
+                        <select id="filter-week" class="input-quick" disabled onchange="handleWeekChange(this.value)">
+                            <option value="">Minggu</option><option value="1">Minggu 1</option><option value="2">Minggu 2</option><option value="3">Minggu 3</option><option value="4">Minggu 4</option><option value="5">Minggu 5</option>
+                        </select>
+                    </div>
+                    <div style="width: 1px; height: 24px; background: var(--border); margin: 0 4px;"></div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="date" id="admin-global-start" class="input" style="width: 130px; padding: 6px 10px; font-size: 12px;">
+                        <span style="color: var(--text-muted); font-size: 12px;">s/d</span>
+                        <input type="date" id="admin-global-end" class="input" style="width: 130px; padding: 6px 10px; font-size: 12px;">
+                    </div>
+                    <div style="background: var(--bg-body); padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; gap: 14px; align-items: center; margin-left: auto;">
+                        <label style="font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="checkbox" id="chk-shift-all" checked onchange="toggleAllShifts(this)"> Semua Shift</label>
+                        <label style="font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="checkbox" id="chk-shift-a" checked onchange="checkShiftStates()"> A</label>
+                        <label style="font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="checkbox" id="chk-shift-b" checked onchange="checkShiftStates()"> B</label>
+                        <label style="font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;"><input type="checkbox" id="chk-shift-ns" checked onchange="checkShiftStates()"> NS</label>
+                    </div>
+                    <!-- SATU TOMBOL RENDER GLOBAL -->
+                    <button onclick="executeWithLoader(renderActiveView)" class="btn btn-primary" style="padding: 8px 24px;">Tampilkan</button>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 1: REKAP OUTPUT -->
+            <div id="admin-view-rekap" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="font-weight: 800; font-size: 18px; color: var(--text-main);">Matriks Rekap Output</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="exportAdminMonitorExcel()" class="btn btn-update" style="padding: 6px 12px;" title="Unduh Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                        <div style="display: flex; background: var(--bg-card); padding: 4px; border-radius: 8px; border: 1px solid var(--border);">
+                            <button id="btn-view-table" onclick="switchRekapView('table')" class="btn" style="background: var(--bg-body); color: var(--text-main); padding: 6px 12px; font-size: 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border);">Tabel</button>
+                            <button id="btn-view-chart" onclick="switchRekapView('chart')" class="btn" style="background: transparent; color: var(--text-muted); padding: 6px 12px; font-size: 12px; border-radius: 6px;">Grafik Mini</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-table-container" class="table-container horizontal-scroll" style="width: 100%; display: block;">
+                    <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        <div class="empty-state-title">Menunggu Logika</div><div class="empty-state-desc">Pilih filter waktu lalu tekan "Tampilkan".</div>
+                    </div>
+                </div>
+
+                <div id="admin-chart-container" class="hidden" style="width: 100%; display: block;">
+                    <div class="card" style="border-style: dashed; padding: 60px;">
+                        <div class="empty-state" style="padding: 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <div class="empty-state-title">Grafik Visual Menunggu</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 2: LEADERBOARD KINERJA -->
+            <div id="admin-view-skill" class="hidden" style="width: 100%;">
+                <h2 style="font-weight: 800; font-size: 18px; margin-bottom: 16px; color: var(--text-main);">Leaderboard Kinerja (SDM)</h2>
+                <div id="admin-skill-container" style="width: 100%; display: block;">
+                    <div class="card" style="padding: 60px; border: 1px dashed #cbd5e1; box-shadow: none;">
+                        <div class="empty-state" style="padding: 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+                            <div class="empty-state-title">Papan Klasemen Kosong</div><div class="empty-state-desc">Pilih parameter dan tekan "Tampilkan".</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 3: TRACING DETAIL -->
+            <div id="admin-view-tracing" class="hidden" style="width: 100%;">
+                <h2 style="font-weight: 800; font-size: 18px; margin-bottom: 16px; color: var(--text-main);">Audit Transaksi Polimorfik</h2>
+                <div class="table-container" style="width: 100%; display: block; overflow-x: auto;">
+                    <div style="width: 100%;">
+                        <table>
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th><input type="text" id="filter-trace-mp" onkeyup="filterAdminTracingTable()" placeholder="Cari Nama MP..." class="input" style="font-size:12px; padding:6px 10px;"></th>
+                                    <th><input type="text" id="filter-trace-assy" onkeyup="filterAdminTracingTable()" placeholder="Cari Assy No..." class="input" style="font-size:12px; padding:6px 10px;"></th>
+                                    <th><input type="text" id="filter-trace-detail" onkeyup="filterAdminTracingTable()" placeholder="Identifikasi Material..." class="input" style="font-size:12px; padding:6px 10px;"></th>
+                                    <th style="width: 100px;"><input type="text" id="filter-trace-qty" onkeyup="filterAdminTracingTable()" placeholder="QTY" class="input" style="font-size:12px; padding:6px 10px; text-align:center;"></th>
+                                    <th style="width: 200px;"><input type="text" id="filter-trace-time" onkeyup="filterAdminTracingTable()" placeholder="Waktu Input" class="input" style="font-size:12px; padding:6px 10px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-trace-table-body">
+                                <tr><td colspan="5" style="text-align: center; padding: 60px; font-weight: 500; color: var(--text-muted); opacity: 0.7;">Pilih batas waktu dan tekan "Tampilkan" untuk melihat rincian data.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="trace-pagination" class="pagination-container hidden">
+                        <button id="btn-trace-prev" class="btn-page" onclick="changeTracePage(-1)">Mundur</button>
+                        <div id="trace-page-info" style="font-size: 13px; font-weight: 700;">Halaman 1 dari 1</div>
+                        <button id="btn-trace-next" class="btn-page" onclick="changeTracePage(1)">Maju</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ================= MODALS & POP-UPS ================= -->
+    <div id="modal-chart-detail" class="modal" style="z-index: 1005;">
+        <div class="card" style="width: 100%; max-width: 900px; position: relative; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+                <div><h2 id="mc-detail-title" style="font-weight: 800; font-size: 20px; color: var(--text-main); margin: 0 0 4px 0;">-</h2><span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Detail Pergerakan Tren Harian</span></div>
+                <button onclick="closeModal('modal-chart-detail')" class="btn-update" style="padding: 6px 12px; border-radius: 6px; font-size: 12.5px;">Tutup Diagram</button>
+            </div>
+            <div id="mc-detail-body" style="width: 100%; overflow-x: auto; padding-bottom: 10px;"></div>
+        </div>
+    </div>
+    
+    <div id="modal-skill-detail" class="modal" style="z-index: 1005;">
+        <div class="card" style="width: 100%; max-width: 420px; position: relative; padding: 32px; text-align: center;">
+            <button onclick="closeModal('modal-skill-detail')" class="btn-icon" style="position: absolute; top: 16px; right: 16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div id="sd-badges" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 12px; min-height: 25px;"></div>
+            <h2 id="sd-name" style="font-weight: 800; font-size: 22px; color: var(--text-main); margin-bottom: 4px; margin-top: 0;">-</h2>
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 24px;">Target Harian Evaluasi: <span id="sd-target" style="color: var(--primary); font-weight: 800;">0</span> Pcs</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--bg-body); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Total Output</div>
+                    <div id="sd-total-qty" style="font-size: 24px; font-weight: 800; color: var(--text-main);">0</div>
+                </div>
+                <div style="background: var(--bg-body); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Produktivitas</div>
+                    <div id="sd-productivity" style="font-size: 24px; font-weight: 800; color: var(--primary);">0%</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Pcs / Jam</div>
+                    <div id="sd-avg-hour" style="font-size: 16px; font-weight: 800; color: var(--text-main);">0</div>
+                </div>
+                <div style="background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Ketuntasan</div>
+                    <div id="sd-hit-100" style="font-size: 16px; font-weight: 800; color: var(--success);">0x</div>
+                </div>
+                <div style="background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Hari Aktif</div>
+                    <div id="sd-active-days" style="font-size: 16px; font-weight: 800; color: var(--text-main);">0</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div style="background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Rekor Maks</div>
+                    <div id="sd-max-day" style="font-size: 16px; font-weight: 800; color: var(--text-main);">0</div>
+                </div>
+                <div style="background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Rekor Min</div>
+                    <div id="sd-min-day" style="font-size: 16px; font-weight: 800; color: var(--text-main);">0</div>
+                </div>
+                <div style="background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Total Input</div>
+                    <div id="sd-wos-count" style="font-size: 16px; font-weight: 800; color: var(--text-main);">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA GLOBAL & STATE ---
+        let adminRecords = []; 
+        let traceFilteredData = []; 
+        let traceCurrentPage = 1; 
+        const TRACE_PER_PAGE = 100;
+        const SETTINGS_KEY = 'erp_admin_settings';
+        let erpSettings = { autoClean: false, retentionDays: 90 };
+        window.chartDataMap = {}; 
+
+        // STATE AKTIF UI
+        let activeSection = 'ACC';
+        let activeSubView = 'rekap';
+
+        // --- FUNGSI LOGIKA WAKTU (MES CORE) ---
+        function getLogicalDate(timestamp) {
+            const date = new Date(timestamp), jam = date.getHours(), menit = date.getMinutes();
+            if (jam < 7 || (jam === 7 && menit < 30)) { date.setDate(date.getDate() - 1); }
+            return date;
+        }
+
+        function getShiftDateISO(timestamp) {
+            const date = getLogicalDate(timestamp), y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        // --- INDEXED DB WRAPPER ---
+        const DB_NAME = 'ERP_BigData_DB';
+        const STORE_NAME = 'transactions';
+        let db;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => { db = e.target.result; resolve(); };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function loadFromDB() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveMultipleToDB(records) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                records.forEach(r => store.put(r));
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function clearDB() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.clear();
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        // --- MANAJEMEN PENGATURAN (AUTO-CLEAN) ---
+        function loadSettings() {
+            try { const s = localStorage.getItem(SETTINGS_KEY); if(s) erpSettings = JSON.parse(s); } catch(e) {}
+            const toggle = document.getElementById('setting-autoclean');
+            if(toggle) toggle.checked = erpSettings.autoClean;
+        }
+
+        function toggleAutoClean(element) {
+            erpSettings.autoClean = element.checked;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(erpSettings));
+            if(erpSettings.autoClean) runAutoClean();
+        }
+
+        async function runAutoClean() {
+            if(!erpSettings.autoClean || adminRecords.length === 0) return;
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - erpSettings.retentionDays);
+            const cutoffISO = cutoffDate.toISOString().split('T')[0];
+            
+            const originalLength = adminRecords.length;
+            adminRecords = adminRecords.filter(r => getShiftDateISO(r.time) >= cutoffISO);
+            
+            if(adminRecords.length < originalLength) {
+                await clearDB();
+                await saveMultipleToDB(adminRecords);
+                updateMemoryUI();
+            }
+        }
+
+        // --- FUNGSI EKSPOR DATABASE (SINKRONISASI GLOBAL) ---
+        function exportDatabaseBackup() {
+            if(adminRecords.length === 0) return alert("Peringatan: Tidak ada data di memori.");
+            const dataStr = JSON.stringify(adminRecords);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().split('T')[0];
+            const a = document.createElement("a"); a.href = url; a.download = `ERP_SYNC_DATABASE_${dateStr}.json`; a.click(); URL.revokeObjectURL(url);
+        }
+
+        // --- MANAJEMEN TANGGAL & FILTER CEPAT (DATA-DRIVEN UX) ---
+        function updateDynamicFilters() {
+            if (adminRecords.length === 0) {
+                let mEl = document.getElementById('filter-month'); let wEl = document.getElementById('filter-week');
+                if(mEl) mEl.innerHTML = '<option value="">Bulan</option>';
+                if(wEl) { wEl.value = ""; wEl.disabled = true; }
+                return;
+            }
+
+            let monthsSet = new Set();
+            adminRecords.forEach(r => { let d = getShiftDateISO(r.time); monthsSet.add(d.substring(0, 7)); });
+            let monthsArr = Array.from(monthsSet).sort().reverse(); 
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+            let optionsHtml = '<option value="">Bulan</option>';
+            monthsArr.forEach(ym => {
+                let [y, m] = ym.split('-'); let monthName = monthNames[parseInt(m) - 1];
+                optionsHtml += `<option value="${ym}">${monthName} ${y}</option>`;
+            });
+
+            let el = document.getElementById('filter-month');
+            if(el) { let currentVal = el.value; el.innerHTML = optionsHtml; if(monthsArr.includes(currentVal)) el.value = currentVal; }
+        }
+
+        function handleMonthChange(yearMonth) {
+            let weekEl = document.getElementById('filter-week');
+            let startEl = document.getElementById('admin-global-start');
+            let endEl = document.getElementById('admin-global-end');
+            
+            if (!yearMonth) { if(weekEl) { weekEl.value = ""; weekEl.disabled = true; } return; }
+            if(weekEl) weekEl.disabled = false;
+            if(weekEl) weekEl.value = ""; 
+
+            let [y, m] = yearMonth.split('-');
+            let lastDay = new Date(y, m, 0).getDate(); 
+            startEl.value = `${yearMonth}-01`; endEl.value = `${yearMonth}-${lastDay}`;
+        }
+
+        function handleWeekChange(weekNum) {
+            let monthEl = document.getElementById('filter-month');
+            let startEl = document.getElementById('admin-global-start');
+            let endEl = document.getElementById('admin-global-end');
+
+            let yearMonth = monthEl.value;
+            if (!yearMonth || !weekNum) return;
+
+            let [y, m] = yearMonth.split('-'); let lastDayOfMonth = new Date(y, m, 0).getDate();
+            let startDay = 1; let endDay = 7;
+            if (weekNum == "1") { startDay = 1; endDay = 7; }
+            else if (weekNum == "2") { startDay = 8; endDay = 14; }
+            else if (weekNum == "3") { startDay = 15; endDay = 21; }
+            else if (weekNum == "4") { startDay = 22; endDay = 28; }
+            else if (weekNum == "5") { startDay = 29; endDay = lastDayOfMonth; }
+
+            if (endDay > lastDayOfMonth) endDay = lastDayOfMonth;
+            if(startDay > lastDayOfMonth) { alert("Bulan ini tidak memiliki Minggu ke-5."); document.getElementById('filter-week').value = ""; return; }
+
+            startEl.value = `${yearMonth}-${String(startDay).padStart(2, '0')}`;
+            endEl.value = `${yearMonth}-${String(endDay).padStart(2, '0')}`;
+        }
+
+        function applyQuickFilter(val) {
+            if (adminRecords.length === 0) return alert("Database kosong.");
+            
+            let sectionRecords = adminRecords.filter(r => categorizeRecord(r) === activeSection);
+            if (sectionRecords.length === 0) return alert(`Tidak ada data untuk Departemen ${activeSection}. Silakan unggah terlebih dahulu.`);
+
+            let minD = "9999-12-31"; let maxD = "0000-01-01";
+            sectionRecords.forEach(r => { let d = getShiftDateISO(r.time); if(d < minD) minD = d; if(d > maxD) maxD = d; });
+            if (minD === "9999-12-31") return;
+
+            let startEl = document.getElementById('admin-global-start');
+            let endEl = document.getElementById('admin-global-end');
+
+            let mEl = document.getElementById('filter-month'); let wEl = document.getElementById('filter-week');
+            if(mEl) mEl.value = ""; if(wEl) { wEl.value = ""; wEl.disabled = true; }
+
+            if (val === 'all') { startEl.value = minD; endEl.value = maxD; } 
+            else if (val === 'today') { startEl.value = maxD; endEl.value = maxD; }
+        }
+
+        function updateProgressUI(pct, text) {
+            const bar = document.getElementById('loader-bar');
+            const pctText = document.getElementById('loader-pct');
+            const desc = document.getElementById('loader-text');
+            if(bar) bar.style.width = pct + '%';
+            if(pctText) pctText.innerText = Math.round(pct) + '%';
+            if(desc && text) desc.innerText = text;
+        }
+
+        // --- INISIALISASI ASYNC ---
+        window.onload = async () => {
+            const todayISO = getShiftDateISO(new Date());
+            document.getElementById('admin-global-end').value = todayISO; 
+            document.getElementById('admin-global-start').value = todayISO;
+
+            setInterval(() => {
+                const now = new Date(), day = String(now.getDate()).padStart(2, '0'), monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const clockStr = `${day} ${monthNames[now.getMonth()]} ${now.getFullYear()} | ${now.toLocaleTimeString('id-ID', { hour12: false })}`;
+                const adminClockEl = document.getElementById('ui-admin-clock'); 
+                if (adminClockEl) adminClockEl.innerText = clockStr;
+            }, 1000);
+
+            updateProgressUI(10, 'Membuka koneksi IndexedDB...');
+            showLoader();
+            try {
+                await initDB();
+                updateProgressUI(50, 'Memuat riwayat transaksi...');
+                adminRecords = await loadFromDB();
+                updateProgressUI(100, 'Selesai');
+            } catch (error) {
+                console.error("IndexedDB Error:", error);
+                alert("Sistem gagal memuat database. Browser Anda mungkin tidak mendukung IndexedDB.");
+            }
+            
+            setTimeout(hideLoader, 300);
+            
+            loadSettings();
+            await runAutoClean();
+            updateDynamicFilters(); 
+            updateMemoryUI();
+        };
+
+        function updateMemoryUI() {
+            const statusEl = document.getElementById('ui-memory-status');
+            if (statusEl) statusEl.innerText = adminRecords.length > 0 ? `${adminRecords.length.toLocaleString('id-ID')} Transaksi` : "0 Transaksi";
+        }
+
+        // --- MANAJEMEN MENU & SECTIONS ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+        function switchMainSidebar(moduleId) {
+            const allMenuItems = document.querySelectorAll('.menu-item');
+            allMenuItems.forEach(item => item.classList.remove('active'));
+            const activeItem = document.querySelector(`.menu-item[data-target="${moduleId}"]`);
+            if (activeItem) activeItem.classList.add('active');
+
+            const allModules = document.querySelectorAll('.module-content');
+            allModules.forEach(mod => mod.classList.add('hidden'));
+            document.getElementById(`module-${moduleId}`).classList.remove('hidden');
+
+            const sectionNav = document.getElementById('dept-sub-nav');
+            if (sectionNav) sectionNav.classList.add('hidden');
+
+            let titleText = "";
+            switch(moduleId) {
+                case 'dashboard': titleText = "Beranda Utama"; break;
+                case 'pengaturan': titleText = "Data Warehouse & Pengaturan"; break;
+            }
+            document.getElementById('top-nav-title').innerText = titleText;
+        }
+
+        // FUNGSI NAVIGASI DEPARTEMEN & SUB TABS
+        function openDepartment(deptName) {
+            // Aktifkan visual sidebar
+            const allMenuItems = document.querySelectorAll('.menu-item');
+            allMenuItems.forEach(item => item.classList.remove('active'));
+            const activeItem = document.querySelector(`.menu-item[data-target="${deptName}"]`);
+            if (activeItem) activeItem.classList.add('active');
+
+            // Set state departemen
+            activeSection = deptName;
+
+            // Buka Module Produksi
+            const allModules = document.querySelectorAll('.module-content');
+            allModules.forEach(mod => mod.classList.add('hidden'));
+            document.getElementById(`module-produksi`).classList.remove('hidden');
+
+            // Munculkan Sub Navigasi Top
+            const sectionNav = document.getElementById('dept-sub-nav');
+            if (sectionNav) sectionNav.classList.remove('hidden');
+            
+            // Set Header Title
+            document.getElementById('top-nav-title').innerText = `Lantai Produksi: Departemen ${deptName}`;
+
+            // Pindah ke tab Rekap secara default
+            switchDeptTab('rekap');
+
+            // Reset Tampilan agar tidak menampilkan data lama
+            resetViews();
+        }
+
+        function switchDeptTab(tabId) {
+            activeSubView = tabId;
+            
+            // Aktifkan tombol top tab
+            document.querySelectorAll('.sub-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+
+            // Tampilkan View yang benar
+            const views = ['rekap', 'skill', 'tracing'];
+            views.forEach(v => {
+                const el = document.getElementById(`admin-view-${v}`);
+                if(el) el.classList.add('hidden');
+            });
+            const viewEl = document.getElementById(`admin-view-${tabId}`);
+            if(viewEl) viewEl.classList.remove('hidden');
+        }
+
+        function resetViews() {
+            document.getElementById('admin-table-container').innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg><div><div class="empty-state-title">Siap Memproses Data ${activeSection}</div><div class="empty-state-desc">Pilih filter waktu lalu tekan tombol Tampilkan.</div></div></div>`;
+            document.getElementById('admin-skill-container').innerHTML = `<div class="card" style="padding: 60px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px dashed #cbd5e1; box-shadow: none;"><div class="empty-state" style="padding: 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg><div class="empty-state-title">Papan Klasemen ${activeSection}</div></div></div>`;
+            document.getElementById('admin-trace-table-body').innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 60px; font-weight: 500; color: var(--text-muted); opacity: 0.7;">Pilih batas waktu dan tekan "Tampilkan".</td></tr>`;
+        }
+
+        // --- ALGORITMA ROUTING DATA POLIMORFIK (SMART PARSER) ---
+        function categorizeRecord(r) {
+            // Membaca signature/struktur objek untuk menentukan asal departemennya
+            if (r.appMode === "HEATGUN MARKER") return "HEATGUN MARKER";
+            if (r.appMode === "MARKER" || r.marker1 !== undefined) return "MARKER";
+            if (r.tube !== undefined && r.jmlCct !== undefined) return "HEATGUN";
+            if (r.joint !== undefined && r.qty_per_cct !== undefined) return "GULUNG";
+            if (r.cutlen !== undefined && (r.cct1 !== undefined || r.type !== undefined)) return "TWIST";
+            if (r.part !== undefined && r.cct !== undefined) return "ACC";
+            
+            // Fallback cerdas berdasarkan `userPros` jika atribut di atas tidak meyakinkan
+            if (r.userPros) {
+                let p = String(r.userPros).toUpperCase();
+                if (p.includes('MARKER') && !p.includes('HEATGUN')) return "MARKER";
+                if (p.includes('HEATGUN MARKER')) return "HEATGUN MARKER";
+                if (p.includes('HEATGUN') && !p.includes('MARKER')) return "HEATGUN";
+                if (p.includes('GULUNG')) return "GULUNG";
+                if (p.includes('TWIST')) return "TWIST";
+            }
+            
+            return "ACC"; // Wadah default (Catch-all)
+        }
+
+        function formatRecordDetail(r, dept) {
+            // Memformat atribut polimorfik menjadi string seragam untuk Tracing Table
+            if(dept === 'MARKER') return `Teks: ${r.marker1||'-'}`;
+            if(dept === 'HEATGUN MARKER') return `Marker: ${r.marker1||'-'}`;
+            if(dept === 'GULUNG') return `Joint: ${r.joint||'-'} | CCT: ${r.jml_cct||'-'}`;
+            if(dept === 'TWIST') return `Cutlen: ${r.cutlen||'-'} | Tipe: ${r.type||'-'}`;
+            if(dept === 'HEATGUN') return `Tube: ${r.tube||'-'} | Joint: ${r.jointDwg||'-'}`;
+            return `CCT: ${r.cct||'-'} | Part: ${r.part||'-'}`; // ACC Fallback
+        }
+
+        function getSectionTarget(section) {
+            switch(section) {
+                case 'ACC': return 4000;
+                case 'MARKER': return 2000; 
+                case 'HEATGUN MARKER': return 1500;
+                case 'GULUNG': return 3500;
+                case 'TWIST': return 3000;
+                case 'HEATGUN': return 2500;
+                default: return 4000;
+            }
+        }
+
+        // --- FUNGSI UTILITAS DASAR ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function showLoader() { document.getElementById('global-loader').classList.remove('hidden'); }
+        function hideLoader() { document.getElementById('global-loader').classList.add('hidden'); }
+        
+        function executeWithLoader(taskFn) { 
+            updateProgressUI(0, 'Mengkalkulasi algoritma...');
+            showLoader(); 
+            let p = 10;
+            let int = setInterval(()=>{ p+=15; if(p>=85) clearInterval(int); updateProgressUI(p, 'Merender visualisasi...'); }, 50);
+            
+            setTimeout(() => { 
+                try { taskFn(); } catch (e) { console.error(e); } 
+                clearInterval(int);
+                updateProgressUI(100, 'Selesai');
+                setTimeout(hideLoader, 200); 
+            }, 350); 
+        }
+
+        /* --- UPLOAD FILE & TRAVERSAL (ASYNC) --- */
+        async function getFilesFromDataTransfer(items) {
+            let files = []; let promises = [];
+            for (let i = 0; i < items.length; i++) { 
+                let item = items[i].webkitGetAsEntry(); 
+                if (item) promises.push(traverseFileTree(item, files)); 
+            }
+            await Promise.all(promises); return files;
+        }
+
+        function traverseFileTree(item, files) {
+            return new Promise((resolve) => {
+                if (item.isFile) { 
+                    item.file(file => { files.push(file); resolve(); });
+                } else if (item.isDirectory) {
+                    let dirReader = item.createReader();
+                    dirReader.readEntries(async entries => { 
+                        let promises = []; 
+                        for (let i = 0; i < entries.length; i++) { promises.push(traverseFileTree(entries[i], files)); } 
+                        await Promise.all(promises); resolve(); 
+                    });
+                } else { resolve(); }
+            });
+        }
+
+        async function handleFileDrop(event, isFolder) {
+            updateProgressUI(0, 'Mengekstrak path data...');
+            showLoader();
+            setTimeout(async () => {
+                try { 
+                    const items = event.dataTransfer.items; 
+                    if (!items) { hideLoader(); return; } 
+                    
+                    let files = [];
+                    if(isFolder) { files = await getFilesFromDataTransfer(items); } 
+                    else { for(let i=0; i<event.dataTransfer.files.length; i++) files.push(event.dataTransfer.files[i]); }
+                    processFiles(files); 
+                } catch(e) { hideLoader(); }
+            }, 50);
+        }
+
+        function handleFileSelect(event) {
+            updateProgressUI(0, 'Menyiapkan berkas...');
+            showLoader();
+            setTimeout(() => { 
+                const files = Array.from(event.target.files); 
+                if (!files.length) { hideLoader(); return; } 
+                processFiles(files); 
+                event.target.value = ''; 
+            }, 50);
+        }
+
+        const readFileAsText = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(file);
+        });
+
+        async function processFiles(files) {
+            let jsonFiles = files.filter(f => f.name.endsWith('.json'));
+            if (jsonFiles.length === 0) { hideLoader(); return alert("Gagal. Tidak ada file JSON laporan yang valid."); }
+
+            let newlyAdded = 0;
+            let validRecords = [];
+            
+            // Hash Map untuk mencegah duplikasi (O(1) time complexity)
+            let existingIds = new Set(adminRecords.map(r => r.id));
+
+            updateProgressUI(10, 'Membaca file JSON...');
+
+            for (let i = 0; i < jsonFiles.length; i++) {
+                try {
+                    let text = await readFileAsText(jsonFiles[i]);
+                    let json = JSON.parse(text);
+                    if (Array.isArray(json)) {
+                        json.forEach(record => {
+                            if(typeof record.qty !== 'undefined') {
+                                if (!record.id) record.id = 'GEN_' + Math.random().toString(36).substr(2, 9);
+                                if (!existingIds.has(record.id)) {
+                                    adminRecords.push(record);
+                                    validRecords.push(record);
+                                    existingIds.add(record.id);
+                                    newlyAdded++;
+                                }
+                            }
+                        });
+                    }
+                } catch(e) { console.error("Parse Error", e); }
+                let pct = 10 + Math.round(((i + 1) / jsonFiles.length) * 70);
+                updateProgressUI(pct, `Mengurai file ${i+1}/${jsonFiles.length}...`);
+            }
+
+            if(validRecords.length > 0) {
+                updateProgressUI(85, 'Menyimpan ke IndexedDB...');
+                await saveMultipleToDB(validRecords);
+            }
+
+            updateProgressUI(100, 'Selesai');
+            updateMemoryUI();
+            updateDynamicFilters(); 
+            
+            setTimeout(() => {
+                alert(`Ekstraksi Selesai: ${newlyAdded} Transaksi baru berhasil ditambahkan ke database.`);
+                hideLoader();
+            }, 300);
+        }
+
+        async function discardAdminData() {
+            if(!confirm("PERINGATAN KRITIS: Anda akan menghapus SELURUH database dari memori komputer ini.\nLanjutkan?")) return;
+            
+            updateProgressUI(10, 'Membersihkan database...');
+            showLoader();
+
+            adminRecords = [];
+            await clearDB();
+            updateMemoryUI();
+            updateDynamicFilters();
+
+            const todayISO = getShiftDateISO(new Date());
+            document.getElementById('admin-global-end').value = todayISO; 
+            document.getElementById('admin-global-start').value = todayISO;
+            
+            resetViews();
+            traceFilteredData = [];
+            document.getElementById('trace-pagination').classList.add('hidden');
+
+            updateProgressUI(100, 'Bersih');
+            setTimeout(hideLoader, 300);
+        }
+
+        function toggleAllShifts(cb) { 
+            document.getElementById('chk-shift-a').checked = cb.checked; 
+            document.getElementById('chk-shift-b').checked = cb.checked; 
+            document.getElementById('chk-shift-ns').checked = cb.checked; 
+        }
+        function checkShiftStates() { 
+            const a = document.getElementById('chk-shift-a').checked;
+            const b = document.getElementById('chk-shift-b').checked;
+            const ns = document.getElementById('chk-shift-ns').checked; 
+            document.getElementById('chk-shift-all').checked = (a && b && ns); 
+        }
+
+        // RENDER DELEGATOR
+        function renderActiveView() {
+            if (activeSubView === 'rekap') renderAdminMonitor();
+            else if (activeSubView === 'skill') renderAdminMatrixSkill();
+            else if (activeSubView === 'tracing') renderAdminTracing();
+        }
+
+        let currentRekapView = 'table';
+        function switchRekapView(mode) {
+            currentRekapView = mode;
+            if (mode === 'table') {
+                document.getElementById('btn-view-table').style.background = 'var(--bg-card)'; document.getElementById('btn-view-table').style.color = 'var(--text-main)'; document.getElementById('btn-view-table').style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; document.getElementById('btn-view-table').style.border = '1px solid var(--border)';
+                document.getElementById('btn-view-chart').style.background = 'transparent'; document.getElementById('btn-view-chart').style.color = 'var(--text-muted)'; document.getElementById('btn-view-chart').style.boxShadow = 'none'; document.getElementById('btn-view-chart').style.border = '1px solid transparent';
+                document.getElementById('admin-table-container').classList.remove('hidden'); document.getElementById('admin-chart-container').classList.add('hidden');
+            } else {
+                document.getElementById('btn-view-chart').style.background = 'var(--bg-card)'; document.getElementById('btn-view-chart').style.color = 'var(--text-main)'; document.getElementById('btn-view-chart').style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; document.getElementById('btn-view-chart').style.border = '1px solid var(--border)';
+                document.getElementById('btn-view-table').style.background = 'transparent'; document.getElementById('btn-view-table').style.color = 'var(--text-muted)'; document.getElementById('btn-view-table').style.boxShadow = 'none'; document.getElementById('btn-view-table').style.border = '1px solid transparent';
+                document.getElementById('admin-chart-container').classList.remove('hidden'); document.getElementById('admin-table-container').classList.add('hidden');
+            }
+        }
+
+        function renderAdminMonitor() {
+            const startStr = document.getElementById('admin-global-start').value, endStr = document.getElementById('admin-global-end').value;
+            if (!startStr || !endStr) return alert("Peringatan: Tentukan tanggal awal dan akhir.");
+            
+            const tableContainer = document.getElementById('admin-table-container'); const chartContainer = document.getElementById('admin-chart-container');
+            
+            let currentDate = new Date(startStr), endDateObj = new Date(endStr);
+            let dateRange = []; while (currentDate <= endDateObj) { const y = currentDate.getFullYear(), m = String(currentDate.getMonth() + 1).padStart(2, '0'), d = String(currentDate.getDate()).padStart(2, '0'); dateRange.push(`${y}-${m}-${d}`); currentDate.setDate(currentDate.getDate() + 1); }
+            
+            if(dateRange.length === 0) { 
+                tableContainer.innerHTML = `<div class="empty-state"><div class="empty-state-title">Rentang Tidak Valid</div></div>`; 
+                chartContainer.innerHTML = tableContainer.innerHTML; return; 
+            }
+            if(adminRecords.length === 0) { 
+                tableContainer.innerHTML = `<div class="empty-state"><div class="empty-state-title">Database Kosong</div><div class="empty-state-desc">Silakan muat file JSON di pengaturan.</div></div>`; 
+                chartContainer.innerHTML = tableContainer.innerHTML; return; 
+            }
+
+            // FILTER DEPARTEMEN DULU (AUTO ROUTING)
+            let sectionRecords = adminRecords.filter(r => categorizeRecord(r) === activeSection);
+            if(sectionRecords.length === 0) {
+                tableContainer.innerHTML = `<div class="empty-state"><div class="empty-state-title">Data Kosong di Departemen ${activeSection}</div></div>`; 
+                chartContainer.innerHTML = tableContainer.innerHTML; return; 
+            }
+
+            const showA = document.getElementById('chk-shift-a').checked, showB = document.getElementById('chk-shift-b').checked, showNS = document.getElementById('chk-shift-ns').checked;
+            let userStats = {};
+            sectionRecords.forEach(r => {
+                let uName = r.userName || "Unknown MP", shiftRaw = r.userShift ? String(r.userShift).toUpperCase() : "NS", shiftCat = "NS"; 
+                if (shiftRaw.includes('A') || shiftRaw === '1' || shiftRaw.includes('PAGI')) shiftCat = "A"; else if (shiftRaw.includes('B') || shiftRaw === '2' || shiftRaw === '3' || shiftRaw.includes('MALAM')) shiftCat = "B";
+                if (shiftCat === "A" && !showA) return; if (shiftCat === "B" && !showB) return; if (shiftCat === "NS" && !showNS) return;
+                
+                if (!userStats[uName]) { userStats[uName] = { id: r.userId || "999999", target: getSectionTarget(activeSection), safeId: uName.replace(/[^a-zA-Z0-9]/g, '_') }; }
+                let d = getShiftDateISO(r.time); if (!userStats[uName][d]) userStats[uName][d] = 0; userStats[uName][d] += Number(r.qty);
+            });
+
+            if(Object.keys(userStats).length === 0) { 
+                tableContainer.innerHTML = `<div class="empty-state"><div class="empty-state-title">Filter Shift Kosong</div></div>`; 
+                chartContainer.innerHTML = tableContainer.innerHTML; return; 
+            }
+
+            if (currentRekapView === 'table') generateMatrixUI('admin-table-container', dateRange, userStats);
+            else generateMicroChartsUI('admin-chart-container', dateRange, userStats);
+        }
+
+        function generateMatrixUI(containerId, dateRange, userStats) {
+            const container = document.getElementById(containerId);
+            let html = `<table class="table-monitor"><thead><tr><th class="freeze-col">Identitas Operator</th>`;
+            dateRange.forEach(d => { let label = new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }); html += `<th class="col-fixed">${label}</th>`; });
+            html += `<th class="freeze-col-total">Akumulasi<br>Output</th></tr></thead><tbody>`;
+
+            let sortedUserNames = Object.keys(userStats).sort((name1, name2) => { let id1 = String(userStats[name1].id), id2 = String(userStats[name2].id); return id1.localeCompare(id2, undefined, {numeric: true}); });
+
+            sortedUserNames.forEach(mp => {
+                let target = userStats[mp].target, rowTotal = 0;
+                html += `<tr><td class="freeze-col">${mp}</td>`;
+                
+                dateRange.forEach(d => {
+                    let qty = userStats[mp][d] || 0; rowTotal += qty; 
+                    let pct = Math.round((qty / target) * 100); let displayQty = qty > 0 ? qty : ''; 
+                    let cellStyle = '', textHtml = '';
+                    if(qty > 0) {
+                        if (pct >= 100) { cellStyle = 'background: rgba(16, 185, 129, 0.08); border-bottom: 2px solid var(--success);'; textHtml = `<div style="font-size: 13.5px; font-weight: 700; color: var(--text-main);">${displayQty}</div>`; }
+                        else { cellStyle = 'background: rgba(239, 68, 68, 0.05); border-bottom: 2px solid var(--danger);'; textHtml = `<div style="font-size: 13.5px; font-weight: 700; color: var(--text-main);">${displayQty}</div>`; }
+                    }
+                    html += `<td class="col-fixed" style="${cellStyle}">${textHtml}</td>`;
+                });
+                
+                html += `<td class="freeze-col-total"><div style="font-size: 14.5px; font-weight: 800; color: var(--primary);">${rowTotal}</div></td></tr>`;
+            });
+            html += `</tbody></table>`; container.innerHTML = html;
+        }
+
+        // --- GRID MICRO CHARTS (SPARKLINES) ---
+        function generateMicroChartsUI(containerId, dateRange, userStats) {
+            const container = document.getElementById(containerId);
+            window.chartDataMap = {}; 
+            
+            let sortedUserNames = Object.keys(userStats).sort((name1, name2) => { let id1 = String(userStats[name1].id), id2 = String(userStats[name2].id); return id1.localeCompare(id2, undefined, {numeric: true}); });
+            let html = `<div class="micro-chart-grid">`;
+            
+            sortedUserNames.forEach(mp => {
+                let target = userStats[mp].target, maxQty = 0, chartData = [], totalAcc = 0;
+                dateRange.forEach(d => { let q = userStats[mp][d] || 0; if(q > maxQty) maxQty = q; chartData.push(q); totalAcc += q; });
+
+                window.chartDataMap[mp] = { dateRange: dateRange, data: chartData, target: target, max: maxQty };
+
+                const svgW = 200, svgH = 50; const drawH = svgH - 4; 
+                const realMax = Math.max(maxQty, target) * 1.1; 
+
+                let polylinePoints = [];
+                let stepX = svgW / Math.max(1, chartData.length - 1);
+                chartData.forEach((q, i) => { let cx = (chartData.length > 1) ? (i * stepX) : (svgW / 2); let cy = svgH - 2 - ((q / realMax) * drawH); polylinePoints.push(`${cx},${cy}`); });
+                let targetY = svgH - 2 - ((target / realMax) * drawH);
+
+                html += `
+                <div class="micro-chart-card" onclick="openChartModal('${mp}')" title="Klik untuk perbesar visualisasi">
+                    <div class="mc-header">
+                        <div class="mc-name">${mp}</div>
+                        <div class="mc-total">${totalAcc.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="mc-svg-container">
+                        <svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="100%" style="overflow: visible;">
+                            <line x1="0" y1="${targetY}" x2="${svgW}" y2="${targetY}" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="2,2" />
+                            <polyline points="${polylinePoints.join(' ')}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`; container.innerHTML = html;
+        }
+
+        function openChartModal(mpName) {
+            const dataObj = window.chartDataMap[mpName];
+            if(!dataObj) return;
+
+            document.getElementById('mc-detail-title').innerText = mpName;
+            
+            const dateRange = dataObj.dateRange; const chartData = dataObj.data; const target = dataObj.target; const maxQty = dataObj.max;
+            const svgWidth = Math.max(600, dateRange.length * 40); 
+            const svgHeight = 250; const padT = 30, padB = 40, padL = 60, padR = 30;
+            const drawW = svgWidth - padL - padR; const drawH = svgHeight - padT - padB;
+            const realMax = Math.max(maxQty, target) * 1.15; 
+
+            let polylinePoints = []; let circlesHtml = ''; let xLabelsHtml = '';
+            let labelDensity = Math.ceil(dateRange.length / 15); 
+
+            chartData.forEach((q, i) => {
+                let cx = padL + (chartData.length > 1 ? i * (drawW / (chartData.length - 1)) : drawW / 2);
+                let cy = padT + drawH; 
+                if (q > 0) {
+                    cy = padT + drawH - ((q / realMax) * drawH);
+                    polylinePoints.push(`${cx},${cy}`);
+                    let dotColor = q >= target ? "var(--success)" : "var(--primary)";
+                    circlesHtml += `<circle cx="${cx}" cy="${cy}" r="4" fill="${dotColor}" stroke="white" stroke-width="2"><title>${dateRange[i]}: ${q} Pcs</title></circle>`;
+                    circlesHtml += `<text x="${cx}" y="${cy - 12}" font-size="12" font-weight="700" fill="var(--text-main)" text-anchor="middle" style="text-shadow: 1px 1px 3px white; pointer-events: none;">${q}</text>`;
+                }
+                if (i % labelDensity === 0 || i === chartData.length - 1) {
+                    let dateObj = new Date(dateRange[i]); let dateLabel = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                    let isSunday = dateObj.getDay() === 0; let textColor = isSunday ? "var(--danger)" : "var(--text-muted)"; let textWeight = isSunday ? "700" : "600";
+                    xLabelsHtml += `<text x="${cx}" y="${svgHeight - 15}" font-size="11" font-weight="${textWeight}" fill="${textColor}" text-anchor="middle">${dateLabel}</text>`;
+                    xLabelsHtml += `<line x1="${cx}" y1="${padT}" x2="${cx}" y2="${padT + drawH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" opacity="0.5" />`;
+                }
+            });
+
+            let targetY = padT + drawH - ((target / realMax) * drawH);
+            let gridHtml = `
+                <line x1="${padL - 10}" y1="${targetY}" x2="${svgWidth - padR}" y2="${targetY}" stroke="var(--border-dark)" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.4" />
+                <rect x="${padL - 55}" y="${targetY - 12}" width="45" height="24" rx="4" fill="#f1f5f9" />
+                <text x="${padL - 32}" y="${targetY + 4}" font-size="11" fill="var(--text-main)" font-weight="700" text-anchor="middle">${target}</text>
+                <line x1="${padL - 10}" y1="${padT + drawH}" x2="${svgWidth - padR}" y2="${padT + drawH}" stroke="var(--border-dark)" stroke-width="1.5" opacity="0.2" />
+                <text x="${padL - 15}" y="${padT + drawH + 4}" font-size="11" fill="var(--text-muted)" font-weight="600" text-anchor="end">0</text>
+            `;
+            if (maxQty > 0 && maxQty !== target) {
+                 let maxY = padT + drawH - ((maxQty / realMax) * drawH);
+                 gridHtml += `<line x1="${padL - 10}" y1="${maxY}" x2="${svgWidth - padR}" y2="${maxY}" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,4" /><text x="${padL - 15}" y="${maxY + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">${maxQty}</text>`;
+            }
+
+            let fullSvg = `<svg viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}px" height="${svgHeight}px" style="overflow: visible; font-family: sans-serif;">${gridHtml}<polyline points="${polylinePoints.join(' ')}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />${xLabelsHtml}${circlesHtml}</svg>`;
+            document.getElementById('mc-detail-body').innerHTML = fullSvg; openModal('modal-chart-detail');
+        }
+
+        window.currentSkillStats = []; 
+        function openSkillDetail(name) {
+            const s = window.currentSkillStats.find(x => x.name === name);
+            if (!s) return;
+            document.getElementById('sd-name').innerText = s.name; document.getElementById('sd-target').innerText = s.target; document.getElementById('sd-total-qty').innerText = s.totalQty; document.getElementById('sd-active-days').innerText = s.activeDays;
+            document.getElementById('sd-avg-hour').innerText = s.avgHour; document.getElementById('sd-hit-100').innerText = s.hit100; document.getElementById('sd-max-day').innerText = s.maxSingleDay; document.getElementById('sd-min-day').innerText = s.minSingleDay;
+            openModal('modal-skill-detail');
+        }
+
+        function renderAdminMatrixSkill() {
+            const startStr = document.getElementById('admin-global-start').value, endStr = document.getElementById('admin-global-end').value, container = document.getElementById('admin-skill-container');
+            if (!startStr || !endStr) return alert("Peringatan: Tentukan tanggal awal dan akhir.");
+            if (adminRecords.length === 0) { container.innerHTML = `<div class="empty-state"><div class="empty-state-title">Database Kosong</div></div>`; return; }
+
+            let sectionRecords = adminRecords.filter(r => categorizeRecord(r) === activeSection);
+            if(sectionRecords.length === 0) { container.innerHTML = `<div class="empty-state"><div class="empty-state-title">Data Kosong di Departemen ${activeSection}</div></div>`; return; }
+
+            const showA = document.getElementById('chk-shift-a').checked, showB = document.getElementById('chk-shift-b').checked, showNS = document.getElementById('chk-shift-ns').checked;
+            
+            let userMap = {};
+            sectionRecords.forEach(r => {
+                let rDate = getShiftDateISO(r.time);
+                if(rDate >= startStr && rDate <= endStr) {
+                    let shiftRaw = r.userShift ? String(r.userShift).toUpperCase() : "NS", shiftCat = "NS"; 
+                    if (shiftRaw.includes('A') || shiftRaw === '1' || shiftRaw.includes('PAGI')) shiftCat = "A"; else if (shiftRaw.includes('B') || shiftRaw === '2' || shiftRaw === '3' || shiftRaw.includes('MALAM')) shiftCat = "B";
+                    if (shiftCat === "A" && !showA) return; if (shiftCat === "B" && !showB) return; if (shiftCat === "NS" && !showNS) return;
+
+                    let uName = r.userName || "Unknown MP";
+                    if(!userMap[uName]) { userMap[uName] = { target: getSectionTarget(activeSection), daily: {}, hourlyOutputs: {}, wosCount: 0 }; }
+                    
+                    if(!userMap[uName].daily[rDate]) userMap[uName].daily[rDate] = 0;
+                    userMap[uName].daily[rDate] += Number(r.qty);
+                    userMap[uName].wosCount++; 
+                    
+                    let d = new Date(r.time); let hourKey = `${rDate}_${d.getHours()}`;
+                    if(!userMap[uName].hourlyOutputs[hourKey]) userMap[uName].hourlyOutputs[hourKey] = 0;
+                    userMap[uName].hourlyOutputs[hourKey] += Number(r.qty);
+                }
+            });
+
+            let statsArray = [];
+            for (let mp in userMap) {
+                let target = userMap[mp].target;
+                let activeDays = 0, totalQty = 0, hit100 = 0, maxSingleDay = 0, minSingleDay = Infinity;
+                let wosCount = userMap[mp].wosCount;
+                
+                for(let d in userMap[mp].daily) {
+                    let q = userMap[mp].daily[d];
+                    if (q > 0) { 
+                        activeDays++; totalQty += q; 
+                        if (q >= target) hit100++; 
+                        if (q > maxSingleDay) maxSingleDay = q; 
+                        if (q < minSingleDay) minSingleDay = q; 
+                    }
+                }
+                if (minSingleDay === Infinity) minSingleDay = 0;
+                
+                if (activeDays > 0) {
+                    let avgDay = Math.round(totalQty / activeDays);
+                    let hourlyBuckets = Object.values(userMap[mp].hourlyOutputs);
+                    let avgHour = hourlyBuckets.length > 0 ? Math.round(hourlyBuckets.reduce((a,b)=>a+b, 0) / hourlyBuckets.length) : 0; 
+                    let productivity = Math.round((avgDay / target) * 100);
+                    statsArray.push({ name: mp, target, totalQty, avgDay, avgHour, hit100, activeDays, maxSingleDay, minSingleDay, wosCount, productivity, badgesHtml: '' });
+                }
+            }
+
+            if(statsArray.length === 0) { container.innerHTML = `<div class="empty-state"><div class="empty-state-title">Data Tidak Ditemukan</div></div>`; return; }
+
+            const getTop3 = (arr, key) => [...new Set(arr.map(item => item[key]))].sort((a,b) => b - a).filter(v => v > 0).slice(0, 3);
+            let topDay = getTop3(statsArray, 'maxSingleDay'); 
+            let topHour = getTop3(statsArray, 'avgHour');
+            let topHit = getTop3(statsArray, 'hit100');
+
+            let dailyList = [...statsArray].sort((a,b) => b.maxSingleDay - a.maxSingleDay);
+            let hourlyList = [...statsArray].sort((a,b) => b.avgHour - a.avgHour);
+            let consistList = [...statsArray].sort((a,b) => b.hit100 - a.hit100);
+
+            statsArray.forEach(s => {
+                let badgesHtml = '';
+                const addBadge = (val, topArr, titleSuffix) => {
+                    let rank = topArr.indexOf(val);
+                    if (rank !== -1) {
+                        let rankNum = rank + 1;
+                        let badgeClass = rankNum === 1 ? 'rank-1-badge' : (rankNum === 2 ? 'rank-2-badge' : 'rank-3-badge');
+                        let medal = rankNum === 1 ? '🥇' : (rankNum === 2 ? '🥈' : '🥉');
+                        badgesHtml += `<div class="skill-badge ${badgeClass}">${medal} Rank ${rankNum}</div>`;
+                    }
+                };
+                addBadge(s.maxSingleDay, topDay, "Output"); addBadge(s.avgHour, topHour, "Kecepatan"); addBadge(s.hit100, topHit, "Konsistensi");
+                s.badgesHtml = badgesHtml; 
+            });
+
+            window.currentSkillStats = statsArray;
+
+            let html = `<div class="lb-container" style="padding-bottom: 24px;">`;
+            html += buildLeaderboardHtml(dailyList, 'maxSingleDay', 'Rekor Harian', 'Pcs / Hari', '🏆');
+            html += buildLeaderboardHtml(hourlyList, 'avgHour', 'Kecepatan Aktual', 'Pcs / Jam', '⚡');
+            html += buildLeaderboardHtml(consistList, 'hit100', 'Konsistensi Target', 'Hari', '🎯');
+            html += `</div>`;
+            
+            container.innerHTML = html;
+        }
+
+        function buildLeaderboardHtml(list, key, title, unit, iconClass) {
+            let html = `<div class="lb-col">
+                <div class="lb-header">
+                    <div style="font-size: 28px; margin-bottom: 4px;">${iconClass}</div>
+                    <div class="lb-header-title">${title}</div>
+                </div>
+                <div class="lb-list">`;
+            
+            list.forEach((s, idx) => {
+                let val = s[key]; let rank = idx + 1; let rankHtml = `<div class="lb-rank">${rank}</div>`;
+                if(rank === 1) rankHtml = `<div class="lb-rank gold">🥇</div>`;
+                if(rank === 2) rankHtml = `<div class="lb-rank silver">🥈</div>`;
+                if(rank === 3) rankHtml = `<div class="lb-rank bronze">🥉</div>`;
+                
+                let highlight = (rank <= 3) ? 'border-color: #bfdbfe; background: #eff6ff;' : '';
+                html += `
+                <div class="lb-item" style="${highlight}" onclick="openSkillDetail('${s.name}')">
+                    ${rankHtml}
+                    <div class="lb-name" title="${s.name}">${s.name}</div>
+                    <div style="text-align: right;">
+                        <div class="lb-score" style="color: ${rank <= 3 ? 'var(--primary)' : 'var(--text-main)'};">${val}</div>
+                        <span class="lb-unit">${unit}</span>
+                    </div>
+                </div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        function exportAdminMonitorExcel() {
+            if(adminRecords.length === 0) return alert("Sistem memblokir: Database kosong.");
+            const startStr = document.getElementById('admin-global-start').value, endStr = document.getElementById('admin-global-end').value;
+            let currentDate = new Date(startStr), endDateObj = new Date(endStr);
+            let dateRange = []; while (currentDate <= endDateObj) { const y = currentDate.getFullYear(), m = String(currentDate.getMonth() + 1).padStart(2, '0'), d = String(currentDate.getDate()).padStart(2, '0'); dateRange.push(`${y}-${m}-${d}`); currentDate.setDate(currentDate.getDate() + 1); }
+
+            let sectionRecords = adminRecords.filter(r => categorizeRecord(r) === activeSection);
+            if(sectionRecords.length === 0) return alert(`Data kosong di Departemen ${activeSection}.`);
+
+            const showA = document.getElementById('chk-shift-a').checked, showB = document.getElementById('chk-shift-b').checked, showNS = document.getElementById('chk-shift-ns').checked;
+            let safeUserStats = {};
+            sectionRecords.forEach(r => {
+                let uName = r.userName || "Unknown MP", shiftRaw = r.userShift ? String(r.userShift).toUpperCase() : "NS", shiftCat = "NS";
+                if (shiftRaw.includes('A') || shiftRaw === '1' || shiftRaw.includes('PAGI')) shiftCat = "A"; else if (shiftRaw.includes('B') || shiftRaw === '2' || shiftRaw === '3' || shiftRaw.includes('MALAM')) shiftCat = "B";
+                if (shiftCat === "A" && !showA) return; if (shiftCat === "B" && !showB) return; if (shiftCat === "NS" && !showNS) return;
+                if (!safeUserStats[uName]) safeUserStats[uName] = { id: r.userId || "999999" };
+                let d = getShiftDateISO(r.time); if (!safeUserStats[uName][d]) safeUserStats[uName][d] = 0; safeUserStats[uName][d] += Number(r.qty);
+            });
+
+            let sortedUserNames = Object.keys(safeUserStats).sort((name1, name2) => { let id1 = String(safeUserStats[name1].id), id2 = String(safeUserStats[name2].id); return id1.localeCompare(id2, undefined, {numeric: true}); });
+
+            let html = `<html><head><meta charset="utf-8"><style>table { border-collapse: collapse; width: 100%; font-family: sans-serif; } th { background-color: #f1f5f9; color: #000; border: 1px solid #cbd5e1; padding: 8px; text-transform: uppercase; font-size: 12px; } td { border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 11px; } .header-report { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px; }</style></head><body><div class="header-report">LAPORAN ANALITIK DEPARTEMEN ${activeSection} (${startStr} s/d ${endStr})</div><table><thead><tr><th style="text-align:left;">IDENTITAS SDM</th>`;
+            dateRange.forEach(d => { let label = new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }); html += `<th>${label}</th>`; });
+            html += `<th>TOTAL AGREGAT</th></tr></thead><tbody>`;
+
+            sortedUserNames.forEach(mp => {
+                html += `<tr><td style="text-align:left; font-weight:bold;">${mp}</td>`;
+                let rowTotal = 0; 
+                dateRange.forEach(d => { let qty = safeUserStats[mp][d] || 0; rowTotal += qty; html += `<td style="font-weight:bold;">${qty > 0 ? qty : ''}</td>`; });
+                html += `<td style="font-weight:bold; color:#2563eb;">${rowTotal}</td></tr>`;
+            });
+
+            html += `</tbody></table></body></html>`;
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `ADMIN_REKAP_${activeSection}_${startStr}_to_${endStr}.xls`; a.click();
+        }
+
+        /* --- PAGINASI VIRTUALISASI (TRACING) --- */
+        function renderAdminTracing() {
+            const startStr = document.getElementById('admin-global-start').value, endStr = document.getElementById('admin-global-end').value;
+            if (!startStr || !endStr) return alert("Peringatan: Parameter waktu dibutuhkan.");
+            
+            let sectionRecords = adminRecords.filter(r => categorizeRecord(r) === activeSection);
+            const filtered = sectionRecords.filter(r => { const rDate = getShiftDateISO(r.time); return rDate >= startStr && rDate <= endStr; });
+            filtered.sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            traceFilteredData = filtered;
+            traceCurrentPage = 1;
+            
+            if (filtered.length === 0) { 
+                document.getElementById('admin-trace-table-body').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 60px; font-weight: 500; color: var(--text-muted); opacity: 0.7;">Data tidak ditemukan pada departemen ini.</td></tr>'; 
+                document.getElementById('trace-pagination').classList.add('hidden');
+                return; 
+            }
+            
+            document.getElementById('trace-pagination').classList.remove('hidden');
+            displayTracePage();
+        }
+
+        function displayTracePage() {
+            const body = document.getElementById('admin-trace-table-body'); body.innerHTML = '';
+            
+            const startIndex = (traceCurrentPage - 1) * TRACE_PER_PAGE;
+            const endIndex = startIndex + TRACE_PER_PAGE;
+            const paginatedItems = traceFilteredData.slice(startIndex, endIndex);
+
+            paginatedItems.forEach(r => {
+                const mpName = r.userName || "Unknown MP";
+                const detailStr = formatRecordDetail(r, activeSection);
+                body.innerHTML += `<tr><td style="font-weight:600; color:var(--text-main);">${mpName}</td><td style="font-weight:600;">${r.assy}</td><td style="font-size:12.5px;">${detailStr}</td><td style="text-align:center; font-weight:700; color:var(--primary); font-size:13.5px;">${r.qty}</td><td style="font-size:12.5px; color:var(--text-muted);">${new Date(r.time).toLocaleString('id-ID')}</td></tr>`;
+            });
+
+            const totalPages = Math.ceil(traceFilteredData.length / TRACE_PER_PAGE) || 1;
+            document.getElementById('trace-page-info').innerText = `Halaman ${traceCurrentPage} dari ${totalPages} (Total Indeks: ${traceFilteredData.length})`;
+            document.getElementById('btn-trace-prev').disabled = traceCurrentPage === 1;
+            document.getElementById('btn-trace-next').disabled = traceCurrentPage === totalPages;
+        }
+
+        function changeTracePage(dir) {
+            const totalPages = Math.ceil(traceFilteredData.length / TRACE_PER_PAGE);
+            if (dir === -1 && traceCurrentPage > 1) { traceCurrentPage--; displayTracePage(); }
+            if (dir === 1 && traceCurrentPage < totalPages) { traceCurrentPage++; displayTracePage(); }
+        }
+
+        function filterAdminTracingTable() {
+            const inputs = ['mp', 'assy', 'detail', 'qty', 'time'].map(id => document.getElementById("filter-trace-" + id).value.toUpperCase());
+            const table = document.getElementById("admin-trace-table-body"), tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                if (tr[i].getElementsByTagName("td").length === 1) continue; 
+                let match = true;
+                for(let j=0; j<5; j++){
+                    let td = tr[i].getElementsByTagName("td")[j];
+                    if (td) { let txt = td.textContent || td.innerText; if (txt.toUpperCase().indexOf(inputs[j]) === -1) match = false; }
+                }
+                tr[i].style.display = match ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>
