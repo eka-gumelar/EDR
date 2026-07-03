@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDR - ACCESSORIES</title>
+    <title>Daily Report Accessories</title>
     <link rel="icon" href="assets/edr-acc.png" type="image/png">
     <style>
         :root {
@@ -105,18 +105,21 @@
         .progress-bg { height: 10px; background: var(--bg-body); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); width: 100%; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .floating-monitor { position: fixed; right: -320px; top: 120px; width: 320px; background: var(--bg-card); border: 1px solid var(--border); border-right: none; border-radius: 16px 0 0 16px; box-shadow: -5px 5px 25px rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 900; padding: 20px; }
+        .floating-monitor { position: fixed; right: -320px; top: 360px; width: 320px; background: var(--bg-card); border: 1px solid var(--border); border-right: none; border-radius: 16px 0 0 16px; box-shadow: -5px 5px 25px rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 900; padding: 20px; }
         .floating-monitor.open { right: 0; }
         .monitor-toggle-btn { position: absolute; left: -45px; top: 20px; width: 45px; height: 45px; background: var(--bg-card); border: 1px solid var(--border); border-right: none; border-radius: 12px 0 0 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: -4px 4px 10px rgba(0,0,0,0.05); color: var(--primary); transition: 0.3s; }
         .monitor-toggle-btn:hover { background: var(--bg-body); width: 50px; left: -50px; }
         .monitor-toggle-btn svg { transition: transform 0.4s; }
         .floating-monitor.open .monitor-toggle-btn svg { transform: rotate(180deg); }
 
+        .queue-indicator { position: absolute; top: -10px; right: -10px; background: var(--primary); color: white; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 20px; box-shadow: 0 4px 10px rgba(37,99,235,0.3); animation: pulse 1.5s infinite; z-index: 20; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
         .table-container { grid-column: 1 / -1; display: flex; flex-direction: column; min-height: 350px; margin-top: 5px; }
         .table-scroll { flex: 1; overflow-y: auto; border-top: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); position: sticky; top: 0; background: var(--bg-card); z-index: 10; }
-        td { padding: 7px 15px; border-bottom: 1px solid var(--border); }
+        td { padding: 7px 15px; border-bottom: 1px solid var(--border); font-size: 12px; }
         
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
 
@@ -162,63 +165,102 @@
         .btn-page:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(37,99,235,0.2); }
         .btn-page:disabled { opacity: 0.4; cursor: not-allowed; background: var(--bg-body); box-shadow: none; transform: none; color: var(--text-muted); border-color: var(--border); }
 
-        .virtual-keyboard { position: absolute; display: none; width: 360px; background: #e2e8f0; box-shadow: 0 12px 30px rgba(0,0,0,0.25); padding: 8px; border-radius: 12px; flex-direction: column; gap: 6px; z-index: 5000; border: 1px solid #cbd5e1; user-select: none; }
-        .virtual-keyboard.vk-show { display: flex; animation: vkPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes vkPop { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .vk-row { display: flex; justify-content: center; gap: 4px; width: 100%; }
-        .vk-key { flex: 1; height: 38px; background: #ffffff; border: 1px solid #cbd5e1; border-bottom: 3px solid #94a3b8; border-radius: 6px; font-size: 14px; font-weight: 900; color: #0f172a; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s; text-transform: uppercase; font-family: inherit; }
-        .vk-key:active { transform: translateY(2px); border-bottom-width: 1px; margin-top: 2px; background: #f1f5f9; color: var(--primary); }
-        .vk-key.vk-wide { flex: 1.5; font-size: 12px; }
-        .vk-key.vk-action { background: #94a3b8; color: white; border-color: #64748b; border-bottom-color: #475569; }
-        .vk-key.vk-action:active { background: #64748b; color: white; }
-        
         @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        #login-page {
+            position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+            background-color: #f1f5f9; background-image: url('assets/bg.png'); background-size: cover; background-position: center; background-repeat: no-repeat; overflow: hidden; z-index: 1;
+        }
+
+        .login-container { display: flex; width: 100%; max-width: 1200px; padding: 0 50px; justify-content: space-between; align-items: center; gap: 40px; z-index: 2; }
+        .login-text-section { flex: 1; }
+        .login-title-small { font-size: 28px; font-weight: 900; color: #000; margin-bottom: 15px; letter-spacing: -0.5px; }
+        .login-title-small .red-e { color: #dc2626; }
+        .login-title-large { font-size: 72px; font-weight: 900; color: var(--primary); line-height: 0.92; margin-bottom: 30px; text-transform: uppercase; font-family: 'Arial Black', Impact, sans-serif; letter-spacing: -1px; text-shadow: 3px 3px 0px rgba(0,0,0,0.03); }
+        .login-version { display: inline-block; background-color: var(--primary); color: white; font-weight: 500; font-size: 18px; padding: 5px 35px; border-radius: 40px; }
+        
+        .login-card-section { flex: 0 0 360px; background: rgba(255, 255, 255, 0.95); padding: 40px 35px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05); border: 1px solid rgba(255,255,255,0.8); }
+        .login-card-section .form-group { margin-bottom: 20px; }
+        .login-card-section .label { font-size: 11px; color: #64748b; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; display: block; text-transform: uppercase; }
+        .login-card-section .input { width: 100%; border: 1.5px solid var(--primary); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #1e293b; background: #fff; transition: all 0.2s; box-shadow: none; outline: none; font-weight: 600; }
+        .login-card-section .input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        .btn-login-submit { width: 100%; background-color: var(--primary); color: white; font-size: 16px; font-weight: 800; padding: 14px; border-radius: 10px; border: none; cursor: pointer; transition: background-color 0.2s; margin-top: 5px; }
+        .btn-login-submit:hover { background-color: #2563eb; }
+        
+        .login-footer-links { margin-top: 25px; display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        .login-footer-links button { background: none; border: none; color: #94a3b8; font-size: 10px; font-weight: 700; cursor: pointer; transition: color 0.2s; padding: 0; }
+        .login-footer-links button:hover { color: #3b82f6; }
+
+        @media (max-width: 900px) { 
+            .login-container { flex-direction: column; justify-content: center; text-align: center; gap: 30px; }
+            .login-title-large { font-size: 52px; }
+            .login-card-section { flex-basis: auto; width: 100%; max-width: 380px; padding: 25px 30px; }
+        }
+
     </style>
 </head>
 <body id="main-body">
 
-    <datalist id="list-assy"></datalist>
     <datalist id="list-parts"></datalist>
     <datalist id="list-parts-global"></datalist>
 
     <div id="global-loader" class="hidden">
         <div class="spinner"></div>
-        <div style="font-weight: 800; color: var(--primary); font-size: 14px; letter-spacing: 1px;">MEMPROSES DATA...</div>
+        <div style="font-weight: 800; color: var(--primary); font-size: 14px; letter-spacing: 1px;">MEMVALIDASI DATA...</div>
     </div>
 
-    <div id="login-page" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-        <div class="card" style="width: 100%; max-width: 420px; text-align: center; height: auto;">
-            <div id="login-icon-box" style="width: 100px; height: 100px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
-                <img src="assets/edr-acc.png" alt="Logo Perusahaan" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23cbd5e1%22 stroke-width=%222%22><rect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%222%22 ry=%222%22></rect><circle cx=%228.5%22 cy=%228.5%22 r=%221.5%22></circle><polyline points=%2221 15 16 10 5 21%22></polyline></svg>'; this.style.width='60px';">
+    <!-- Login Page -->
+    <div id="login-page">
+        <div class="login-container">
+            <div class="login-text-section">
+                <img src="assets/banshu-logo.png" alt=" " style="width: 55px; height: 55px; object-fit: contain; margin-bottom: 12px;" onerror="this.style.display='none'">
+                <img src="assets/edr-acc.png" alt=" " style="width: 70px; height: 70px; object-fit: contain; margin-bottom: 5px;" onerror="this.style.display='none'">
+                <div class="login-title-small"><span class="red-e">E</span>-lectronic Daily Report</div>
+                <div class="login-title-large">PASANG<br>ACCESSORIES</div>
+                <div class="login-version">V. 3.2.0 (Dual Scan Queue)</div>
             </div>
-            <h1 class="font-black" style="font-size: 24px; font-weight: 800; color: black;">PROSES ACCESSORIES</h1>
-            <p style="color: black; font-size: 24px; font-weight: 800; margin-bottom: 0px; margin-top: -5px;">DAILY REPORT</p>
-            <p style="color: var(--text-muted); font-size: 15px; font-weight: 500; margin-bottom: 25px; margin-top: -2px;">v.2.5.11</p>
-            
-            <form id="login-form" style="text-align: left;">
-                <div style="margin-bottom: 15px;"><label class="label">Lisensi ID / Username</label><input type="text" id="login-username" required class="input" placeholder=""></div>
-                <div style="margin-bottom: 20px;"><label class="label">Password</label><input type="password" id="login-password" required class="input" placeholder=""></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">Login</button>
-            </form>
-            
-            <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; display: flex; gap: 8px;">
-                <button type="button" onclick="openTrainingListModal()" class="btn btn-ghost" style="color: var(--primary); font-weight: 800; flex: 1; background: transparent; border: 1px solid var(--primary);">MODE TRAINING/MOVING MP</button>
-                <button type="button" onclick="openLicenseListModal()" class="btn btn-primary" style="padding: 10px 15px;" title="Manajemen Lisensi">+</button>
+
+            <div class="login-card-section">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="label">ID USER</label>
+                        <input type="text" id="login-username" required class="input" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">PASSWORD</label>
+                        <input type="password" id="login-password" required class="input" placeholder="">
+                    </div>
+                    <button type="submit" class="btn-login-submit">LOGIN</button>
+                </form>
+                
+                <div class="login-footer-links">
+                    <button type="button" onclick="openTrainingListModal()">MODE TRAINING / MOVING</button>
+                    <button type="button" onclick="openLicenseListModal()">+ KELOLA LISENSI</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="app-page" class="hidden">
         <nav>
-            <div class="font-black" style="font-size: 22px; letter-spacing: -0.04em; line-height: 1; font-weight: 800; ">PROSES <span style="color: var(--primary); font-weight: 800;">ACCESSORIES </span></div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="assets/banshu-logo.png" alt="Logo" style="width: 38px; height: 38px; object-fit: contain;" onerror="this.style.display='none'">
+                <div style="display: flex; flex-direction: column;">
+                    <div class="font-black" style="font-size: 22px; letter-spacing: -0.04em; line-height: 1; font-weight: 800; ">PROSES <span style="color: var(--primary); font-weight: 800;">ACCESSORIES </span></div>
+                    <div onclick="openModal('modal-doc-info')" style="font-size: 11px; font-weight: 400; color: var(--text-muted); letter-spacing: 0.02em; margin-top: 3px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                        NO. DOKUMEN: F-PRD-PP-006
+                    </div>
+                </div>
+            </div>
             <div class="search-wrapper no-print">
                 <div class="search-container"><input type="text" id="global-search" list="list-parts-global" class="search-input" placeholder="Search Accessories" oninput="handleGlobalSearch(this.value)"></div>
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                <a href="LINK_QAS_ANDA_DISINI" target="_blank" class="btn btn-ghost" style="background: #e0e7ff; color: var(--primary); font-size: 11px; padding: 8px 12px; border: none; text-decoration: none; font-weight: 800;">QAS</a>
+                <a href="https://www.bei.pt/qas-exp/page/login.php" target="_blank" class="btn btn-ghost" style="background: #e0e7ff; color: var(--primary); font-size: 11px; padding: 8px 12px; border: none; text-decoration: none; font-weight: 800;">QAS</a>
                 <button onclick="openModal('modal-help-mp')" class="btn-help" title="Petunjuk Pengisian" style="margin-right: 5px;">?</button>
                 <button onclick="openArchive(true)" class="btn btn-ghost" style="background: var(--border); color: var(--text-main); font-size: 11px; padding: 8px 12px; border: none;">Data Report</button>
-                <button id="btn-end-shift" onclick="endShift()" class="btn" style="background: var(--success); color: white; padding: 8px 12px; font-size: 12px; font-weight: 900;">Save</button>
+                <button id="btn-end-shift" onclick="endShift()" class="btn" style="background: var(--success); color: white; padding: 8px 12px; font-size: 12px; font-weight: 900;">Save & End Shift</button>
                 <button onclick="logout()" class="btn" style="border: none; background: #fee2e2; color: var(--danger); font-weight: 800; padding: 8px 12px; font-size: 12px;">Keluar</button>
             </div>
         </nav>
@@ -235,6 +277,7 @@
                     <option value="SIMULASI">SIMULASI (TRAINING)</option>
                 </select>
             </div>
+            
             <div class="clock-display" id="ui-clock"></div>
         </header>
 
@@ -259,29 +302,35 @@
                     </div>
                 </div>
 
-                <!-- DATA PRODUKSI (CARD 2) -->
+                <!-- DUAL SCAN SERIAL WOS (CARD 2) -->
                 <div class="card" id="form-card" style="opacity: 0.6; transition: all 0.3s; position: relative;">
                     <div id="form-overlay" style="position: absolute; inset: 0; background: rgba(255,255,255,0.75); z-index: 10; cursor: not-allowed; border-radius: 12px;"></div>
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative; z-index: 11;">
-                        <label class="label" id="ui-form-title" style="color: var(--text-main); margin: 0;">Input Data</label>
+                        <label class="label" id="ui-form-title" style="color: var(--text-main); margin: 0;">Scan Serial WOS <span id="ui-multiplier" style="color:var(--primary); font-size:9px;"></span></label>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <button onclick="clearInputs()" class="btn btn-clear-header">Clear</button>
-                            <button onclick="openModal('modal-add-assy')" class="btn-help" style="margin: 0; background: var(--bg-body); border: 1px solid var(--border);" title="Tambah Assy No Baru">⚙️</button>
                         </div>
                     </div>
-                    <div style="margin-bottom: 6px;"><label class="label">Assy No.</label><input type="text" id="in-assy" list="list-assy" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)" disabled></div>
-                    <div style="margin-bottom: 6px;"><label class="label">CCT No.</label><input type="text" id="in-cct" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)" disabled></div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
-                        <div><label class="label">W/P</label><input type="text" id="in-wp" class="input" oninput="checkFormCompleteness()" onfocus="openKeyboard(this)" disabled></div>
-                        <div><label class="label">Qty <span id="ui-multiplier" style="color:var(--primary); font-size:9px;"></span></label><input type="number" id="in-qty" class="input" max="100" placeholder="" oninput="checkFormCompleteness()" onfocus="closeKeyboard()" oncontextmenu="openMultiplier(event)" disabled></div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px;">
+                        <div>
+                            <label class="label" style="text-align:left; color:var(--primary);">SCAN SISI R (A)</label>
+                            <input type="text" id="in-serial-a" class="input" style="font-size: 16px; padding: 14px 10px; font-family: monospace; text-align: center;" placeholder="Barcode R (A)..." oncontextmenu="openMultiplier(event)" disabled>
+                        </div>
+                        <div>
+                            <label class="label" style="text-align:left; color:var(--danger);">SCAN SISI F (B)</label>
+                            <input type="text" id="in-serial-b" class="input" style="font-size: 16px; padding: 14px 10px; font-family: monospace; text-align: center;" placeholder="Barcode F (B)..." oncontextmenu="openMultiplier(event)" disabled>
+                        </div>
                     </div>
-                    <button id="btn-submit" onclick="handleSave()" class="btn btn-primary" style="width:100%; padding: 14px; font-size: 15px; margin-top: 15px;" disabled>ENTER</button>
-                    <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn hidden" style="width:100%; margin-top:6px; border:1px solid var(--border); padding: 8px; background: white; color: var(--text-main); position: relative; z-index: 11;">BATAL EDIT</button>
+
+                    <div style="text-align: center; margin-top: 10px; position: relative; z-index: 11;">
+                        <p style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Data akan diproses & divalidasi ke server setelah discan.</p>
+                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn hidden" style="width:100%; margin-top:6px; border:1px solid var(--border); padding: 8px; background: white; color: var(--text-main);">BATAL EDIT</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- AREA VISUALISASI KANAN -->
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div class="card" style="position: relative;">
                     <div class="visual-card-content">
@@ -299,11 +348,12 @@
                 </div>
             </div>
 
+            <!-- TABEL RIWAYAT LENGKAP -->
             <div class="card table-container">
-                <div style="padding: 8px 20px; background: var(--bg-body); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;"><span class="label" style="margin:0;">Riwayat</span><span id="ui-count" style="font-size: 9px; font-weight: 900; background: var(--primary); color: white; padding: 2px 10px; border-radius: 10px;">0 WOS</span></div>
+                <div style="padding: 8px 20px; background: var(--bg-body); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;"><span class="label" style="margin:0;">Riwayat Scan (WOS)</span><span id="ui-count" style="font-size: 9px; font-weight: 900; background: var(--primary); color: white; padding: 2px 10px; border-radius: 10px;">0 WOS</span></div>
                 <div class="table-scroll">
                     <table>
-                        <thead><tr><th>Assy No</th><th>CCT No</th><th>Part No</th><th>WP</th><th style="text-align:center;">Qty</th><th>Timestamp</th><th style="text-align:right">Aksi</th></tr></thead>
+                        <thead><tr><th>Assy No</th><th>CCT No</th><th>Part No</th><th style="text-align:center;">Qty</th><th>Waktu</th><th style="text-align:right">Aksi</th></tr></thead>
                         <tbody id="main-table-body"></tbody>
                     </table>
                 </div>
@@ -311,13 +361,14 @@
         </main>
     </div>
 
+    <!-- FLOATING MONITOR ACHIEVEMENTS -->
     <div id="floating-monitor" class="floating-monitor hidden">
         <button class="monitor-toggle-btn" onclick="toggleMonitor()" title="Buka/Tutup Monitor">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <label class="label" style="color: var(--warning); margin-bottom: 5px; text-align: center; font-size: 12px;">Monitor Achievements</label>
         <div class="monitor-grid">
-            <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Output</p>
+            <p style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Output WOS</p>
             <div id="ui-total" class="monitor-val" style="font-size: 64px;">0</div>
             <div class="monitor-stats-row" style="grid-template-columns: 1fr 2px 1fr 2px 1fr; gap: 8px; margin: 15px 0;">
                 <div style="text-align: center;"><label class="label" style="font-size: 8px;">Target</label><div id="ui-target" class="font-black" style="font-size: 16px; font-weight: 800;">0</div></div>
@@ -333,125 +384,20 @@
         </div>
     </div>
 
-    <!-- Modal List Lisensi -->
-    <div id="modal-license-list" class="modal">
-        <div class="card" style="width: 100%; max-width: 450px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">DAFTAR LISENSI MP</h3>
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="openModal('modal-import-license')" class="btn" style="background: var(--bg-body); color: var(--text-main); padding: 4px 10px; border: 1px solid var(--border);" title="Upload folder data_users">📂</button>
-                    <button onclick="openAddLicenseModal()" class="btn btn-primary" style="padding: 4px 12px;" title="Tambah Lisensi Baru">+</button>
-                    <button onclick="closeModal('modal-license-list')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
-                </div>
-            </div>
-            <div id="license-list-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;"></div>
-        </div>
-    </div>
+    <!-- MODALS UTAMA (License, Training, Add Part, Help) -->
+    <div id="modal-license-list" class="modal"><div class="card" style="width: 100%; max-width: 450px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">DAFTAR LISENSI MP</h3><div style="display: flex; gap: 8px;"><button onclick="openModal('modal-import-license')" class="btn" style="background: var(--bg-body); color: var(--text-main); padding: 4px 10px; border: 1px solid var(--border);" title="Upload folder data_users">📂</button><button onclick="openAddLicenseModal()" class="btn btn-primary" style="padding: 4px 12px;" title="Tambah Lisensi Baru">+</button><button onclick="closeModal('modal-license-list')" class="btn btn-danger" style="padding: 4px 10px;">X</button></div></div><div id="license-list-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;"></div></div></div>
+    <div id="modal-add-license" class="modal"><div class="card" style="width: 100%; max-width: 400px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">TAMBAH LISENSI BARU</h3><button onclick="closeModal('modal-add-license'); openLicenseListModal();" class="btn btn-danger" style="padding: 4px 10px;">X</button></div><div style="display: flex; flex-direction: column; gap: 10px;"><div><label class="label">Nomor Lisensi</label><input type="text" id="new-lic-id" class="input"></div><div><label class="label">Nama Lengkap</label><input type="text" id="new-lic-name" class="input"></div><div><label class="label">Password Login</label><input type="password" id="new-lic-pass" class="input"></div><div><label class="label">Shift</label><select id="new-lic-shift" class="input" style="cursor: pointer;"><option value="A">Shift A</option><option value="B">Shift B</option><option value="N">Non-Shift</option></select></div><div><label class="label">Proses Default</label><select id="new-lic-pros" class="input" style="cursor: pointer;"><option value="ACC REGULAR">ACC REGULAR</option><option value="ACC PROJECT/WC">ACC PROJECT/WC</option><option value="ACC SMV">ACC SMV</option></select></div><button onclick="submitNewLicense()" class="btn btn-primary" style="margin-top: 10px;">SIMPAN LISENSI</button></div></div></div>
+    <div id="modal-import-license" class="modal"><div class="card" style="width: 100%; max-width: 450px; position: relative;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><div style="display: flex; align-items: center;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">SINKRONISASI LISENSI</h3><button onclick="openModal('modal-help-import')" class="btn-help" style="background: var(--bg-body);" title="Petunjuk Instruksi Kerja">?</button></div><button onclick="closeModal('modal-import-license')" class="btn btn-danger" style="padding: 4px 10px;">X</button></div><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">Sistem membutuhkan injeksi berkas lisensi agar dapat meregistrasi pekerja ke dalam memori komputer ini (secara <i>Offline</i>).</p><div class="drop-zone" style="padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; cursor: pointer;" onclick="document.getElementById('sync-file-input').click()" ondragover="event.preventDefault(); this.classList.add('active');" ondragleave="this.classList.remove('active');" ondrop="event.preventDefault(); this.classList.remove('active'); handleCustomDrop(event, 'sync');"><input type="file" id="sync-file-input" webkitdirectory directory multiple onchange="handleFileInput(event, 'sync')" class="hidden"><div style="pointer-events: none; position: relative; z-index: 1; text-align: center;"><span style="font-size: 40px; display: block; margin-bottom: 10px;">🪪</span><span style="font-weight: 800; font-size: 14px; color: var(--text-main);">Tarik File / Folder <span style="color:var(--primary);">data_users</span> Kemari</span><br><span style="font-size: 11px; opacity: 0.7;">Atau klik untuk memuat manual</span></div></div></div></div>
+    <div id="modal-training-list" class="modal"><div class="card" style="width: 100%; max-width: 400px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">PILIH MP (TRAINING/MOVING)</h3><button onclick="closeModal('modal-training-list')" class="btn btn-danger" style="padding: 4px 10px;">X</button></div><div id="training-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px;"></div><button onclick="startTraining()" class="btn btn-primary" style="width: 100%;">MASUK SEBAGAI MP BARU</button></div></div>
+    <div id="modal-training" class="modal"><div class="card" style="width: 100%; max-width: 350px; text-align: center; height: auto;"><h3 class="font-black" style="color: var(--primary); font-size: 18px; margin-bottom: 10px; font-weight: 800;">MODE TRAINING</h3><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Silakan masukkan nama Anda untuk memulai sesi simulasi kerja tanpa menyimpan data ke memori utama.</p><input type="text" id="in-training-name" class="input" placeholder="Ketik nama Anda di sini..." style="margin-bottom: 20px; text-align: center;"><div style="display: flex; gap: 10px;"><button onclick="closeModal('modal-training')" class="btn" style="flex: 1; background: var(--border); color: var(--text-main);">BATAL</button><button onclick="submitTrainingName()" class="btn btn-primary" style="flex: 1;">MULAI LATIHAN</button></div></div></div>
+    <div id="modal-add-part" class="modal"><div class="card" style="width: 100%; max-width: 350px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">DAFTARKAN PART BARU</h3><button onclick="closeModal('modal-add-part')" class="btn btn-danger" style="padding: 4px 10px;">X</button></div><p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Part No ini akan disimpan ke memori dan bisa divalidasi seterusnya.</p><div><label class="label">Part No Baru</label><input type="text" id="new-part-no" class="input" style="text-transform: uppercase;"></div><button onclick="submitNewPart()" class="btn btn-primary" style="width: 100%; margin-top: 15px;">SIMPAN PART</button></div></div>
 
-    <!-- Modal Tambah Lisensi Baru -->
-    <div id="modal-add-license" class="modal">
-        <div class="card" style="width: 100%; max-width: 400px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">TAMBAH LISENSI BARU</h3>
-                <button onclick="closeModal('modal-add-license'); openLicenseListModal();" class="btn btn-danger" style="padding: 4px 10px;">X</button>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div><label class="label">Nomor Lisensi</label><input type="text" id="new-lic-id" class="input"></div>
-                <div><label class="label">Nama Lengkap</label><input type="text" id="new-lic-name" class="input"></div>
-                <div><label class="label">Password Login</label><input type="password" id="new-lic-pass" class="input"></div>
-                <div>
-                    <label class="label">Shift</label>
-                    <select id="new-lic-shift" class="input" style="cursor: pointer;">
-                        <option value="A">Shift A</option>
-                        <option value="B">Shift B</option>
-                        <option value="N">Non-Shift</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="label">Proses Default</label>
-                    <select id="new-lic-pros" class="input" style="cursor: pointer;">
-                        <option value="ACC REGULAR">ACC REGULAR</option>
-                        <option value="ACC PROJECT/WC">ACC PROJECT/WC</option>
-                        <option value="ACC SMV">ACC SMV</option>
-                    </select>
-                </div>
-                <button onclick="submitNewLicense()" class="btn btn-primary" style="margin-top: 10px;">SIMPAN LISENSI</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Upload Data JSON -->
-    <div id="modal-import-license" class="modal">
-        <div class="card" style="width: 100%; max-width: 450px; position: relative;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center;"><h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">SINKRONISASI LISENSI</h3><button onclick="openModal('modal-help-import')" class="btn-help" style="background: var(--bg-body);" title="Petunjuk Instruksi Kerja">?</button></div>
-                <button onclick="closeModal('modal-import-license')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">Sistem membutuhkan injeksi berkas lisensi agar dapat meregistrasi pekerja ke dalam memori komputer ini (secara <i>Offline</i>).</p>
-            <div class="drop-zone" style="padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; cursor: pointer;"
-                 onclick="document.getElementById('sync-file-input').click()"
-                 ondragover="event.preventDefault(); this.classList.add('active');" ondragleave="this.classList.remove('active');" ondrop="event.preventDefault(); this.classList.remove('active'); handleCustomDrop(event, 'sync');">
-                <input type="file" id="sync-file-input" webkitdirectory directory multiple onchange="handleFileInput(event, 'sync')" class="hidden">
-                <div style="pointer-events: none; position: relative; z-index: 1; text-align: center;"><span style="font-size: 40px; display: block; margin-bottom: 10px;">🪪</span><span style="font-weight: 800; font-size: 14px; color: var(--text-main);">Tarik File / Folder <span style="color:var(--primary);">data_users</span> Kemari</span><br><span style="font-size: 11px; opacity: 0.7;">Atau klik untuk memuat manual</span></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal List History Mode Training -->
-    <div id="modal-training-list" class="modal">
-        <div class="card" style="width: 100%; max-width: 400px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">PILIH MP (TRAINING/MOVING)</h3>
-                <button onclick="closeModal('modal-training-list')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
-            </div>
-            <div id="training-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px;"></div>
-            <button onclick="startTraining()" class="btn btn-primary" style="width: 100%;">MASUK SEBAGAI MP BARU</button>
-        </div>
-    </div>
-
-    <div id="modal-training" class="modal">
-        <div class="card" style="width: 100%; max-width: 350px; text-align: center; height: auto;">
-            <h3 class="font-black" style="color: var(--primary); font-size: 18px; margin-bottom: 10px; font-weight: 800;">MODE TRAINING</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Silakan masukkan nama Anda untuk memulai sesi simulasi kerja tanpa menyimpan data ke memori utama.</p>
-            <input type="text" id="in-training-name" class="input" placeholder="Ketik nama Anda di sini..." style="margin-bottom: 20px; text-align: center;">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="closeModal('modal-training')" class="btn" style="flex: 1; background: var(--border); color: var(--text-main);">BATAL</button>
-                <button onclick="submitTrainingName()" class="btn btn-primary" style="flex: 1;">MULAI LATIHAN</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Registrasi Part & Assy Baru (Manual Add) -->
-    <div id="modal-add-part" class="modal">
-        <div class="card" style="width: 100%; max-width: 350px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">DAFTARKAN PART BARU</h3>
-                <button onclick="closeModal('modal-add-part')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
-            </div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Part No ini akan disimpan ke memori dan bisa divalidasi seterusnya.</p>
-            <div><label class="label">Part No Baru</label><input type="text" id="new-part-no" class="input" style="text-transform: uppercase;"></div>
-            <button onclick="submitNewPart()" class="btn btn-primary" style="width: 100%; margin-top: 15px;">SIMPAN PART</button>
-        </div>
-    </div>
-
-    <div id="modal-add-assy" class="modal">
-        <div class="card" style="width: 100%; max-width: 350px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-black" style="color: var(--primary); font-size: 16px; font-weight: 800;">DAFTARKAN ASSY BARU</h3>
-                <button onclick="closeModal('modal-add-assy')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
-            </div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">Assy No ini akan ditambahkan ke rekomendasi Dropdown WOS.</p>
-            <div><label class="label">Assy No Baru</label><input type="text" id="new-assy-no" class="input" style="text-transform: uppercase;"></div>
-            <button onclick="submitNewAssy()" class="btn btn-primary" style="width: 100%; margin-top: 15px;">SIMPAN ASSY</button>
-        </div>
-    </div>
-
-    <div id="modal-help-mp" class="modal" style="z-index: 1001;"><div class="card" style="width: 100%; max-width: 420px;"><h3 class="font-black" style="margin-bottom: 10px; border-bottom: 2px solid var(--border); padding-bottom: 5px; font-weight: 800;">PANDUAN: INPUT PRODUKSI (MP)</h3><div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;"><ol class="sop-list" style="margin-top: 10px;"><li>Masukkan data menggunakan alat pemindai (<i>Scanner</i>) atau ketik manual berurutan mulai dari <b>Assy No, CCT No, Part No, WP</b>, dan <b>Qty</b>.</li><li>Tekan tombol <b>ENTER</b> pada <i>keyboard</i> setelah mengisi Qty untuk merender data.</li><li>Perhatikan peringatan <b>Visual Part</b> di sebelah kanan. Jika warna berkedip Merah/Kuning, AWAS material tersebut serupa dengan part lain!</li><li>Klik tombol <b>End Shift</b> (warna kuning) hanya jika jam kerja Anda telah selesai untuk mengunduh laporan.</li><li>Setelah End Shift ditekan, form input akan terkunci dan Anda masuk ke mode pengamat.</li></ol></div><button onclick="closeModal('modal-help-mp')" class="btn btn-primary" style="width: 100%;">SAYA MENGERTI</button></div></div>
-    <div id="modal-help-import" class="modal" style="z-index: 1001;"><div class="card" style="width: 100%; max-width: 420px;"><h3 class="font-black" style="margin-bottom: 10px; border-bottom: 2px solid var(--border); padding-bottom: 5px; font-weight: 800;">PANDUAN: SINKRONISASI LISENSI</h3><div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;"><ol class="sop-list" style="margin-top: 10px;"><li>Pastikan Anda telah membuat fail JSON pekerja di menu <b>Registrasi Lisensi</b>.</li><li>Kumpulkan seluruh fail JSON tersebut ke dalam 1 (satu) folder khusus di Desktop yang diberi nama persis: <b>data_users</b>.</li><li>Tahan klik <i>(Drag)</i> file / folder tersebut menggunakan tetikus.</li><li>Geser dan lepaskan <i>(Drop)</i> persis di dalam kotak bergaris putus-putus pada layar ini.</li><li>Proses ini wajib dilakukan satu kali pada setiap perangkat/komputer baru di area produksi.</li></ol></div><button onclick="closeModal('modal-help-import')" class="btn btn-primary" style="width: 100%;">SAYA MENGERTI</button></div></div>
+    <div id="modal-help-mp" class="modal" style="z-index: 1001;"><div class="card" style="width: 100%; max-width: 420px;"><h3 class="font-black" style="margin-bottom: 10px; border-bottom: 2px solid var(--border); padding-bottom: 5px; font-weight: 800;">PANDUAN: INPUT PRODUKSI (MP)</h3><div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;"><ol class="sop-list" style="margin-top: 10px;"><li>Pilih/Ketik <b>Part No Accessories</b> di kolom atas.</li><li>Gunakan <i>Scanner</i> untuk tembak barcode WOS di kolom Sisi A (R) atau Sisi B (F).</li><li>Sistem menampung <i>scanning</i> cepat dan memvalidasi diam-diam di latar belakang. Anda tidak perlu menunggu loading.</li><li>Perhatikan peringatan <b>Visual Part</b> di kanan, waspada material serupa.</li><li>Aktifkan <b>WOS Visual Toggle</b> di Menu atas jika ingin melihat render aktual barcode dari server.</li></ol></div><button onclick="closeModal('modal-help-mp')" class="btn btn-primary" style="width: 100%;">SAYA MENGERTI</button></div></div>
+    <div id="modal-help-import" class="modal" style="z-index: 1001;"><div class="card" style="width: 100%; max-width: 420px;"><h3 class="font-black" style="margin-bottom: 10px; border-bottom: 2px solid var(--border); padding-bottom: 5px; font-weight: 800;">PANDUAN: SINKRONISASI LISENSI</h3><div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;"><ol class="sop-list" style="margin-top: 10px;"><li>Kumpulkan seluruh fail JSON pekerja ke dalam 1 folder bernama: <b>data_users</b>.</li><li>Tahan klik <i>(Drag)</i> file / folder tersebut menggunakan tetikus.</li><li>Geser dan lepaskan <i>(Drop)</i> di dalam area bergaris putus-putus.</li></ol></div><button onclick="closeModal('modal-help-import')" class="btn btn-primary" style="width: 100%;">SAYA MENGERTI</button></div></div>
 
     <div id="modal-search" class="modal"><div class="card" style="width: 100%; max-width: 500px; text-align: center; height: auto;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px;"><h3 class="font-black" style="color: var(--primary); font-size: 14px; font-weight: 800;">HASIL PENCARIAN</h3><button onclick="closeModal('modal-search')" class="btn btn-danger" style="padding: 4px 10px;">X</button></div><div id="search-ui-warning" class="warning-flashing hidden" style="margin-bottom: 15px;">⚠ HATI-HATI MATERIAL SERUPA<br>PASTIKAN PART ACCESSORIES SESUAI DENGAN WOS!</div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 180px; margin-bottom: 15px;"><div id="search-img-a-container" class="img-box"><img id="search-img-part" class="hidden"><div id="search-img-part-ph" style="font-size:40px; font-weight:800; opacity:5%;">SAMPLE</div><div id="search-label-part-a" class="floating-img-label hidden"></div><div id="search-badge-ok" class="status-badge badge-ok hidden">OK</div></div><div id="search-img-b-container" class="img-box"><img id="search-img-loc" class="hidden"><div id="search-img-loc-ph" style="font-size:40px; font-weight:800; opacity:5%; color: var(--danger);">SAMPLE</div><div id="search-label-part-b" class="floating-img-label label-danger hidden"></div><div id="search-badge-ng" class="status-badge badge-ng hidden">NG</div></div></div><div style="text-align: left; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><div class="info-pill"><label class="label" style="font-size: 9px;">Part Accessories</label><div id="search-ui-pn" class="data-val">-</div></div><div class="info-pill"><label class="label" style="font-size: 9px;">Lokasi</label><div id="search-ui-loc" class="data-val" style="color: var(--text-main);">-</div></div></div><button onclick="closeModal('modal-search')" class="btn btn-primary" style="margin-top: 20px; width: 100%;">TUTUP</button></div></div>
     
-    <div id="modal-mul" class="modal"><div class="card" style="width: 300px; text-align: center; height: auto;"><h3 class="font-black" style="margin-bottom: 10px; font-size: 18px; font-weight: 800;">Multiplier WOS</h3><p style="font-size: 10px; opacity: 0.6; margin-bottom: 15px;">Masukkan jumlah WOS</p><input type="number" id="in-mul" value="1" min="1" class="input" style="text-align: center; font-size: 30px; margin-bottom: 20px;"><button onclick="applyMultiplier()" class="btn btn-primary" style="width: 100%;">SET JUMLAH WOS</button></div></div>
+    <div id="modal-mul" class="modal"><div class="card" style="width: 300px; text-align: center; height: auto;"><h3 class="font-black" style="margin-bottom: 10px; font-size: 18px; font-weight: 800;">Multiplier Scan (WOS)</h3><p style="font-size: 10px; opacity: 0.6; margin-bottom: 15px;">Simulasikan 1 kali scan dihitung berapa WOS?</p><input type="number" id="in-mul" value="1" min="1" class="input" style="text-align: center; font-size: 30px; margin-bottom: 20px;"><button onclick="applyMultiplier()" class="btn btn-primary" style="width: 100%;">TERAPKAN PENGALI</button></div></div>
     
     <div id="modal-arc" class="modal">
         <div class="card" style="width: 100%; max-width: 900px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
@@ -464,10 +410,10 @@
             </div>
             <div style="display: flex; gap: 10px; margin-bottom: 15px; background: var(--bg-body); padding: 15px; border-radius: 10px; align-items: flex-end; flex-wrap: wrap;">
                 <div><label class="label">Pilih Tanggal</label><input type="date" id="arc-date" class="input" style="padding: 8px; font-size: 13px;" onchange="executeWithLoader(renderArchiveTable)"></div>
-                <div><button onclick="exportArchiveJSON()" class="btn btn-primary" style="padding: 9px 15px; font-size: 12px;">Save</button></div>
+                <div><button onclick="exportArchiveJSON()" class="btn btn-primary" style="padding: 9px 15px; font-size: 12px;">Download</button></div>
                 <div style="text-align: right; min-width: 120px; border-left: 2px solid var(--border); padding-left: 15px; margin-left: auto;">
                     <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
-                        <label class="label" style="margin: 0;">Total Qty</label>
+                        <label class="label" style="margin: 0;">Total Scan Valid</label>
                         <span id="arc-wos-count" style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 900;">0 WOS</span>
                     </div>
                     <div id="arc-total" class="font-black" style="font-size: 24px; color: var(--primary); font-weight: 800;">0</div>
@@ -476,10 +422,10 @@
             <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                        <tr><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Assy No</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">CCT No</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Part No</th><th style="text-align: center; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Qty</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Waktu Input</th></tr>
+                        <tr><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Serial WOS</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Assy No</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">CCT</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Part No</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Qty</th><th style="text-align: left; padding: 10px 15px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border);">Waktu</th></tr>
                     </thead>
                     <tbody id="archive-table-body">
-                        <tr><td colspan="5" style="text-align: center; padding: 40px; opacity: 0.5;">Memuat data...</td></tr>
+                        <tr><td colspan="6" style="text-align: center; padding: 40px; opacity: 0.5;">Memuat data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -513,124 +459,483 @@
         </div>
     </div>
 
+    <div id="modal-doc-info" class="modal" style="z-index: 2000;">
+        <div class="card" style="width: 100%; max-width: 550px; background: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 class="font-black" style="color: var(--text-main); font-size: 16px; font-weight: 800;">DETAIL DOKUMEN</h3>
+                <button onclick="closeModal('modal-doc-info')" class="btn btn-danger" style="padding: 4px 10px;">X</button>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px; color: #000; border: 1px solid #000;">
+                <tr><td style="border: 1px solid #000; padding: 6px 12px; width: 35%; font-weight: 500;">No. Dokumen</td><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">: F-PRD-PP-006</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">Rev</td><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">: 00</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">Tanggal Berlaku</td><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">: 24/06/2026</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">Halaman</td><td style="border: 1px solid #000; padding: 6px 12px; font-weight: 500;">: 1</td></tr>
+            </table>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; color: #000; border: 1px solid #000; table-layout: fixed;">
+                <tr><td style="border: 1px solid #000; padding: 6px; font-weight: 500;">Approved By</td><td style="border: 1px solid #000; padding: 6px; font-weight: 500;">Known By</td><td style="border: 1px solid #000; padding: 6px; font-weight: 500;">Made By</td></tr>
+                <tr>
+                    <td style="border: 1px solid #000; height: 90px; vertical-align: middle; padding: 5px;"><img src="assets/sign-approved.png" alt="sign" style="max-height: 70px; max-width: 100%; object-fit: contain;"></td>
+                    <td style="border: 1px solid #000; height: 90px; vertical-align: middle; padding: 5px;"><img src="assets/sign-known.png" alt="sign" style="max-height: 70px; max-width: 100%; object-fit: contain;"></td>
+                    <td style="border: 1px solid #000; height: 90px; vertical-align: middle; padding: 5px;"><img src="assets/sign-made.png" alt="sign" style="max-height: 70px; max-width: 100%; object-fit: contain;"></td>
+                </tr>
+                <tr><td style="border: 1px solid #000; padding: 6px; font-weight: 500;">name</td><td style="border: 1px solid #000; padding: 6px; font-weight: 500;">name</td><td style="border: 1px solid #000; padding: 6px; font-weight: 500;">Slamet Arifin</td></tr>
+            </table>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
 
-    <div id="virtual-keyboard" class="virtual-keyboard" onmousedown="event.preventDefault()">
-        <div class="vk-row">
-            <button class="vk-key" onclick="vkType('1')">1</button><button class="vk-key" onclick="vkType('2')">2</button><button class="vk-key" onclick="vkType('3')">3</button><button class="vk-key" onclick="vkType('4')">4</button><button class="vk-key" onclick="vkType('5')">5</button><button class="vk-key" onclick="vkType('6')">6</button><button class="vk-key" onclick="vkType('7')">7</button><button class="vk-key" onclick="vkType('8')">8</button><button class="vk-key" onclick="vkType('9')">9</button><button class="vk-key" onclick="vkType('0')">0</button>
-        </div>
-        <div class="vk-row">
-            <button class="vk-key" onclick="vkType('Q')">Q</button><button class="vk-key" onclick="vkType('W')">W</button><button class="vk-key" onclick="vkType('E')">E</button><button class="vk-key" onclick="vkType('R')">R</button><button class="vk-key" onclick="vkType('T')">T</button><button class="vk-key" onclick="vkType('Y')">Y</button><button class="vk-key" onclick="vkType('U')">U</button><button class="vk-key" onclick="vkType('I')">I</button><button class="vk-key" onclick="vkType('O')">O</button><button class="vk-key" onclick="vkType('P')">P</button>
-        </div>
-        <div class="vk-row">
-            <button class="vk-key" onclick="vkType('A')">A</button><button class="vk-key" onclick="vkType('S')">S</button><button class="vk-key" onclick="vkType('D')">D</button><button class="vk-key" onclick="vkType('F')">F</button><button class="vk-key" onclick="vkType('G')">G</button><button class="vk-key" onclick="vkType('H')">H</button><button class="vk-key" onclick="vkType('J')">J</button><button class="vk-key" onclick="vkType('K')">K</button><button class="vk-key" onclick="vkType('L')">L</button><button class="vk-key" onclick="vkType('-')">-</button>
-        </div>
-        <div class="vk-row">
-            <button class="vk-key" onclick="vkType('Z')">Z</button><button class="vk-key" onclick="vkType('X')">X</button><button class="vk-key" onclick="vkType('C')">C</button><button class="vk-key" onclick="vkType('V')">V</button><button class="vk-key" onclick="vkType('B')">B</button><button class="vk-key" onclick="vkType('N')">N</button><button class="vk-key" onclick="vkType('M')">M</button>
-            <button class="vk-key vk-wide vk-action" onclick="vkBackspace()">⌫ HAPUS</button>
-        </div>
-        <div class="vk-row">
-            <button class="vk-key vk-wide" onclick="vkType(' ')">SPASI</button>
-        </div>
-
-    </div>
-
-    <div id="modal-confirmation" class="modal" style="z-index: 10000; pointer-events: auto;">
-        <div class="card" style="width: 100%; max-width: 750px; text-align: center; cursor: wait; border: 8px solid #ef4444; animation: flashBorderEffect 0.8s infinite; box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
-                <h3 class="font-black" style="color: var(--primary); font-size: 18px; font-weight: 900; margin: 0;">KONFIRMASI MATERIAL</h3>
-                <div id="confirm-countdown" style="background: #fee2e2; color: var(--danger); font-weight: 900; padding: 6px 18px; border-radius: 20px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">5s</div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 320px; margin-bottom: 15px;">
-                <div class="img-box correct-part-highlight">
-                    <img id="confirm-img-part" class="hidden" style="max-height: 100%; max-width: 100%;">
-                    <div id="confirm-img-part-ph" style="font-size:50px; font-weight:800; opacity:5%;">SAMPLE</div>
-                    <div id="confirm-label-part-a" class="floating-img-label hidden" style="font-size: 14px; padding: 6px 18px;"></div>
-                    <div class="status-badge badge-ok" style="width: 45px; height: 45px; font-size: 16px;">OK</div>
-                </div>
-                <div class="img-box similar-part-highlight">
-                    <img id="confirm-img-loc" class="hidden" style="max-height: 100%; max-width: 100%;">
-                    <div id="confirm-img-loc-ph" style="font-size:50px; font-weight:800; opacity:5%; color: var(--danger);">SAMPLE</div>
-                    <div id="confirm-label-part-b" class="floating-img-label label-danger hidden" style="font-size: 14px; padding: 6px 18px;"></div>
-                    <div class="status-badge badge-ng" style="width: 45px; height: 45px; font-size: 16px;">NG</div>
-                </div>
-            </div>
-
-            <div class="warning-flashing" style="margin-bottom: 15px; padding: 14px; font-size: 15px; line-height: 1.4; letter-spacing: 0.05em;">
-                ⚠ HATI-HATI MATERIAL SERUPA<br>PASTIKAN PART ACCESSORIES SESUAI DENGAN WOS!
-            </div>
-
-            <div style="text-align: left; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="info-pill"><label class="label" style="font-size: 11px;">Part Accessories</label><div id="confirm-ui-pn" class="data-val" style="font-size: 20px;">-</div></div>
-                <div class="info-pill"><label class="label" style="font-size: 11px;">Lokasi Rak</label><div id="confirm-ui-loc" class="data-val" style="color: var(--text-main); font-size: 20px;">-</div></div>
-            </div>
-        </div>
-    </div>
-
-    <script src="../../PP/database/data_assy.js"></script>
-    <script src="../../PP/database/data_parts.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="data_parts.js"></script>
 
     <script>
-    // Ganti dengan konfigurasi Firebase Anda dari Firebase Console
-    const firebaseConfig = {
-        apiKey: "AIzaSyB1Z4yZRzpCJ7jI9VH9TRBril2MOBXBECA",
-        authDomain: "edr-acc.firebaseapp.com",
-        databaseURL: "https://edr-acc-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "edr-acc",
-        storageBucket: "edr-acc.firebasestorage.app",
-        messagingSenderId: "834027499780",
-        appId: "1:834027499780:web:9f9bd1a2a86f40f4b2a051"
-    };
-        
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        const db = firebase.firestore();
-
-        // ==========================================
-        // 3. VARIABEL GLOBAL
-        // ==========================================
         const HARDCODED_USERS = [];
-        const MASTER = { assy: typeof DATA_ASSY !== 'undefined' ? DATA_ASSY : [], parts: typeof DATA_PARTS !== 'undefined' ? DATA_PARTS : [], users: [] };
+        const MASTER = { parts: typeof DATA_PARTS !== 'undefined' ? DATA_PARTS : [], users: [] };
 
         let trainingUsersList = [];
-        let user = null, records = [], multiplier = 1, isTraining = false;
+        let user = null, records = [], multiplier = 1, isTraining = false, editingId = null;
         let isIntentionalExit = false, isSpectator = false;
         
         let lastValidPart = ""; 
-        let consecutiveSaves = 0; 
-        let lastSavedAssy = ""; 
         let idleScrollTimer; 
         let carouselIntervalId = null;
-        let activeVkInput = null; 
-
+        
         // Paginasi Data Report
         let arcFilteredData = []; 
         let arcCurrentPage = 1; 
         const ARC_PER_PAGE = 10;
 
-        // Firebase Editing Variables
-        let currentEditBucketId = null;
-        let oldRecordData = null;
-
-        // ==========================================
-        // 4. FUNGSI UI & UTILITAS
-        // ==========================================
         function showToast(message, type = 'success') { 
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-            let iconSvg = type === 'success' ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>` : 
-                          type === 'error' ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>` : 
-                          `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
-            let title = type === 'success' ? 'BERHASIL' : type === 'error' ? 'PERINGATAN' : 'INFORMASI';
+            
+            let iconSvg = '';
+            let title = '';
+            if (type === 'success') {
+                iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                title = 'BERHASIL';
+            } else if (type === 'error') {
+                iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                title = 'PERINGATAN';
+            } else {
+                iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+                title = 'INFORMASI';
+            }
 
             toast.innerHTML = `<div class="toast-icon">${iconSvg}</div><div class="toast-content"><span class="toast-title">${title}</span><span class="toast-message">${message}</span></div>`;
-            container.prepend(toast); void toast.offsetWidth; toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); toast.style.transform = 'translateX(50px)'; toast.style.opacity = '0'; setTimeout(() => { if(container.contains(toast)) toast.remove(); }, 400); }, 3000); 
+            container.prepend(toast);
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); toast.style.transform = 'translateX(50px)'; toast.style.opacity = '0'; setTimeout(() => { if(container.contains(toast)) toast.remove(); }, 400); }, 3500); 
+        }
+
+        // Status Kunci Form Scan
+        function lockForm() {
+            const overlay = document.getElementById('form-overlay'); if (overlay) overlay.classList.remove('hidden');
+            const formCard = document.getElementById('form-card'); if (formCard) formCard.style.opacity = '0.6';
+            const status = document.getElementById('lock-status');
+            if (status) { status.innerHTML = 'NO PROSES'; status.style.background = '#fee2e2'; status.style.color = 'var(--danger)'; }
+            ['in-serial-a', 'in-serial-b'].forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = true; el.value = ''; } });
+        }
+
+        function unlockForm() {
+            if(isSpectator) return;
+            const overlay = document.getElementById('form-overlay'); if (overlay) overlay.classList.add('hidden');
+            const formCard = document.getElementById('form-card'); if (formCard) formCard.style.opacity = '1';
+            const status = document.getElementById('lock-status');
+            if (status) { status.innerHTML = 'SEDANG PROSES'; status.style.background = 'var(--success)'; status.style.color = 'white'; }
+            ['in-serial-a', 'in-serial-b'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+            document.getElementById('in-serial-a').focus();
+        }
+
+        function onPartInputLive(val) {
+            handleVisualUpdate(val);
+            const exactMatch = MASTER.parts.find(p => p.pn.toUpperCase() === val.trim().toUpperCase());
+            if (exactMatch) {
+                if (lastValidPart !== "" && lastValidPart !== exactMatch.pn && !editingId) {
+                    ['in-serial-a', 'in-serial-b'].forEach(id => document.getElementById(id).value = '');
+                    showToast('Material baru terdeteksi. Silakan mulai scan!', 'info');
+                }
+                lastValidPart = exactMatch.pn;
+                unlockForm(); 
+            } else {
+                lockForm(); 
+            }
+        }
+
+        function showDynamicWrongPartModal(serial, assy, cct, qty, sisi, wosPart, inputPart) {
+            const modalId = 'err-' + Date.now() + Math.floor(Math.random() * 1000);
+            const offset = Math.floor(Math.random() * 40 - 20); // Offsets animasi bertumpuk
+            const modalHtml = `
+            <div id="${modalId}" class="modal" style="z-index: 2500; display: flex; background: rgba(0,0,0,0.4);">
+                <div class="card" style="width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); transform: translateY(${offset}px) translateX(${offset}px);">
+                    <h3 class="font-black" style="color: var(--danger); margin-bottom: 10px; font-weight: 800; border-bottom: 2px solid var(--border); padding-bottom: 10px; text-align: center;">⚠ SALAH PART ACCESSORIES</h3>
+                    <div style="font-size: 13px; color: var(--text-main); margin-bottom: 20px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr><td style="padding: 5px; font-weight: bold; border-bottom: 1px solid var(--border);">Serial WOS</td><td style="padding: 5px; border-bottom: 1px solid var(--border); text-align: right; font-family: monospace;">${serial}</td></tr>
+                            <tr><td style="padding: 5px; font-weight: bold; border-bottom: 1px solid var(--border);">Assy No</td><td style="padding: 5px; border-bottom: 1px solid var(--border); text-align: right;">${assy}</td></tr>
+                            <tr><td style="padding: 5px; font-weight: bold; border-bottom: 1px solid var(--border);">CCT No</td><td style="padding: 5px; border-bottom: 1px solid var(--border); text-align: right;">${cct}</td></tr>
+                            <tr><td style="padding: 5px; font-weight: bold; border-bottom: 1px solid var(--border);">Qty WOS</td><td style="padding: 5px; border-bottom: 1px solid var(--border); text-align: right; color: var(--primary); font-weight: bold;">${qty} Pcs</td></tr>
+                            <tr><td style="padding: 5px; font-weight: bold; border-bottom: 1px solid var(--border);">Part di WOS (Sisi ${sisi})</td><td style="padding: 5px; border-bottom: 1px solid var(--border); text-align: right; color: var(--danger); font-weight: 900;">${wosPart}</td></tr>
+                            <tr><td style="padding: 5px; font-weight: bold;">Part yang Anda Input</td><td style="padding: 5px; text-align: right; font-weight: 900;">${inputPart}</td></tr>
+                        </table>
+                    </div>
+                    <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-danger" style="width: 100%;">SAYA MENGERTI - TUTUP PERINGATAN</button>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        async function processWosScan(serialVal, partVal, type) {
+            try {
+                const fetchUrl = `http://www.bei.pt/mrp/forms/generate_loadmachine_detailwos_get.php?s_periode=&s_line_production=&s_machine_name=&s_ck_machine_name=&s_wp_awal=&s_serialwos=${encodeURIComponent(serialVal)}&s_db=exp`;
+                const response = await fetch(fetchUrl);
+                const htmlText = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                
+                const getCleanText = (selector) => {
+                    const el = doc.querySelector(selector);
+                    if (!el) return '';
+                    let text = el.innerText || el.textContent || '';
+                    text = text.replace(/[\n\r\s]+/g, '').trim();
+                    text = text.replace(/^\+/, ''); 
+                    return text === '-' ? '' : text;
+                };
+
+                const wosAssy = getCleanText('.assyno1_1');
+                const wosCct = getCleanText('.circuitno_1');
+                const wosWp = getCleanText('.wp_1');
+                const wosQtyText = getCleanText('.qty_1');
+                const wosQty = parseInt(wosQtyText) || 1;
+
+                const accr1 = getCleanText('.accr_1');
+                const accr2 = getCleanText('.accr_2');
+                const accf1 = getCleanText('.accf_1');
+                const accf2 = getCleanText('.accf_2');
+
+                const cleanInputPart = partVal.replace(/[\n\r\s]+/g, '').replace(/^\+/, '').trim();
+
+                let validPartsFromWOS = [];
+                let labelSisi = "";
+                if (type === 'A') {
+                    // Masukkan accr1 & accr2 ke dalam kandidat jika ada isinya
+                    validPartsFromWOS = [accr1, accr2].filter(p => p !== '');
+                    labelSisi = "R (A)";
+                } else if (type === 'B') {
+                    // Masukkan accf1 & accf2 ke dalam kandidat jika ada isinya
+                    validPartsFromWOS = [accf1, accf2].filter(p => p !== '');
+                    labelSisi = "F (B)";
+                }
+
+                if(validPartsFromWOS.length === 0 && !wosAssy) {
+                    showToast(`GAGAL WOS: Server tidak menemukan data untuk Serial ${serialVal}`, "error");
+                } 
+                else if (validPartsFromWOS.includes(cleanInputPart)) {
+                    const data = { 
+                        id: editingId ? editingId : Date.now(), 
+                        serial: serialVal, 
+                        part: partVal,
+                        assy: wosAssy || "-",
+                        cct: wosCct || "-",
+                        wp: wosWp || "-",
+                        time: new Date().toISOString(), 
+                        userId: user.id, userName: user.name, userShift: user.shift, userPros: user.pros, 
+                        qty: wosQty * multiplier 
+                    };
+                    
+                    if (editingId) {
+                        const index = records.findIndex(r => r.id === editingId);
+                        if (index !== -1) { data.time = records[index].time; records[index] = data; }
+                        editingId = null;
+                        document.getElementById('ui-form-title').innerText = "Scan Serial WOS";
+                        document.getElementById('ui-form-title').style.color = "var(--text-main)";
+                        document.getElementById('btn-cancel-edit').classList.add('hidden');
+                    } else {
+                        records.unshift(data);
+                    }
+
+                    multiplier = 1; document.getElementById('ui-multiplier').innerText = ''; 
+                    if (!isTraining) localStorage.setItem(`mp_records_cache_${user.id}`, JSON.stringify(records));
+                    refreshUI();
+
+                    showToast(`✓ Serial ${serialVal} OK (${labelSisi})`, "success");
+
+                } else {
+                    showDynamicWrongPartModal(serialVal, wosAssy || "-", wosCct || "-", wosQty, labelSisi, validPartsFromWOS.join(" / ") || "KOSONG", cleanInputPart);
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast(`ERROR KONEKSI: Gagal memproses Serial ${serialVal}`, "error");
+            }
+        }
+
+        function handleScanInput(e, type) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (isSpectator) return;
+
+                const el = e.target;
+                const serialVal = el.value.trim().toUpperCase();
+                const partVal = document.getElementById('in-part').value.trim().toUpperCase();
+
+                if (serialVal.length < 18) {
+                    showToast("DITOLAK: Serial WOS tidak sah (Kurang dari 18 karakter)!", "error");
+                    el.value = ''; return;
+                }
+
+                if (!partVal) {
+                    showToast("DITOLAK: Pilih Part No Accessories terlebih dahulu!", "error");
+                    el.value = ''; return;
+                }
+
+                const currentSession = getSessionIdentifier(new Date());
+                const isDuplicateDB = records.some(r => r.serial === serialVal && getSessionIdentifier(r.time) === currentSession && r.id !== editingId);
+                
+                if (isDuplicateDB) {
+                    showToast(`DITOLAK: Serial ${serialVal} sudah dipindai di sesi ini!`, "error");
+                    el.value = ''; return;
+                }
+
+                el.value = ''; 
+                processWosScan(serialVal, partVal, type);
+            }
+        }
+
+        function getLogicalDate(timestamp) {
+            const date = new Date(timestamp), jam = date.getHours(), menit = date.getMinutes();
+            if (jam < 7 || (jam === 7 && menit < 30)) { date.setDate(date.getDate() - 1); }
+            return date;
+        }
+
+        function getShiftDateISO(timestamp) {
+            const date = getLogicalDate(timestamp), y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getSessionIdentifier(timestamp) {
+            const logicalDate = getLogicalDate(timestamp), y = logicalDate.getFullYear(), m = String(logicalDate.getMonth() + 1).padStart(2, '0'), d = String(logicalDate.getDate()).padStart(2, '0');
+            const actualDate = new Date(timestamp), jam = actualDate.getHours(), menit = actualDate.getMinutes();
+            let session = "PAGI"; if (jam >= 21 || jam < 7 || (jam === 7 && menit < 30)) session = "MALAM";
+            return `${y}-${m}-${d}_${session}`;
+        }
+
+        function getTargetByProcess(prosRaw) {
+            let p = String(prosRaw).toUpperCase();
+            if (p.includes('SMV')) return 850;
+            if (p.includes('PROJECT') || p.includes('WC')) return 2000;
+            return 4000; 
+        }
+
+        function refreshDatalists() {
+            const lParts = document.getElementById('list-parts'), lPartsG = document.getElementById('list-parts-global');
+            if (lParts && lPartsG) { let h = ""; MASTER.parts.forEach(v => h += `<option value="${v.pn}">`); lParts.innerHTML = h; lPartsG.innerHTML = h; }
+        }
+
+        window.onload = () => {
+            let dynamicUsers = []; try { dynamicUsers = JSON.parse(localStorage.getItem('dynamicUsers') || '[]'); } catch (e) {}
+            MASTER.users = [...HARDCODED_USERS, ...dynamicUsers];
+
+            try { let customParts = JSON.parse(localStorage.getItem('customParts') || '[]'); if(customParts.length > 0) MASTER.parts = [...MASTER.parts, ...customParts]; } catch (e) {}
+            try { trainingUsersList = JSON.parse(localStorage.getItem('trainingUsers') || '[]'); } catch (e) {}
+
+            document.querySelectorAll('.input').forEach(input => {
+                input.addEventListener('focus', function() { if (typeof this.select === 'function') { this.select(); } });
+            });
+
+            refreshDatalists();
+            
+            document.getElementById('login-form').onsubmit = (e) => {
+                e.preventDefault();
+                const u = document.getElementById('login-username').value, p = document.getElementById('login-password').value;
+                const match = MASTER.users.find(x => x.id === u && x.pass === p);
+                
+                if(match || (u === 'admin' && p === 'admin')) { 
+                    isTraining = false; 
+                    executeWithLoader(() => login(match || { id: "ADMIN", name: "Administrator", shift: "A", kat: "ADM", pros: "ACC REGULAR" })); 
+                }
+                else showToast("Lisensi ID atau Password Salah. Coba admin/admin untuk demo.", "error");
+            };
+
+            const partEl = document.getElementById('in-part');
+            if (partEl) {
+                partEl.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        let val = partEl.value.trim().toUpperCase();
+                        if (val) {
+                            const match = MASTER.parts.find(p => p.pn.toUpperCase().startsWith(val) || p.pn.toUpperCase().includes(val));
+                            if (match) {
+                                partEl.value = match.pn; onPartInputLive(match.pn); 
+                            } else {
+                                showToast('GAGAL: Part No tidak terdaftar di Database!', 'error');
+                                onPartInputLive(''); partEl.focus(); partEl.select();
+                            }
+                        }
+                    }
+                };
+            }
+
+            // Daftarkan event Scan A dan B
+            const serialA = document.getElementById('in-serial-a');
+            if(serialA) serialA.onkeydown = (e) => handleScanInput(e, 'A');
+            
+            const serialB = document.getElementById('in-serial-b');
+            if(serialB) serialB.onkeydown = (e) => handleScanInput(e, 'B');
+
+            setInterval(() => {
+                const now = new Date(), day = String(now.getDate()).padStart(2, '0'), monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const clockStr = `${day} ${monthNames[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('id-ID', { hour12: false })}`;
+                const clockEl = document.getElementById('ui-clock'); if (clockEl) clockEl.innerText = clockStr;
+            }, 1000);
+
+            let idleEventThrottle;
+            function handleIdleEvent() {
+                if (idleEventThrottle) return;
+                idleEventThrottle = setTimeout(() => { resetIdleScrollTimer(); idleEventThrottle = null; }, 500); 
+            }
+
+            ['scroll', 'mousemove', 'keydown', 'touchstart'].forEach(evt => window.addEventListener(evt, handleIdleEvent, { passive: true }));
+            resetIdleScrollTimer();
+        };
+
+        async function getFilesFromDataTransfer(items) { let files = []; let promises = []; for (let i = 0; i < items.length; i++) { let item = items[i].webkitGetAsEntry(); if (item) promises.push(traverseFileTree(item, files)); } await Promise.all(promises); return files; }
+        function traverseFileTree(item, files) { return new Promise((resolve) => { if (item.isFile) { item.file(file => { files.push(file); resolve(); }); } else if (item.isDirectory) { let dirReader = item.createReader(); dirReader.readEntries(async entries => { let promises = []; for (let i = 0; i < entries.length; i++) { promises.push(traverseFileTree(entries[i], files)); } await Promise.all(promises); resolve(); }); } else { resolve(); } }); }
+        async function handleCustomDrop(event, mode) { showLoader(); setTimeout(async () => { try { const items = event.dataTransfer.items; if (!items) { hideLoader(); return; } const files = await getFilesFromDataTransfer(items); processFiles(files, mode); } catch(e) { hideLoader(); } }, 50); }
+        function handleFileInput(event, mode) { showLoader(); setTimeout(() => { const files = Array.from(event.target.files); if (!files.length) { hideLoader(); return; } processFiles(files, mode); event.target.value = ''; }, 50); }
+
+        function processFiles(files, mode) {
+            let jsonFiles = files.filter(f => f.name.endsWith('.json'));
+            if (jsonFiles.length === 0) { hideLoader(); showToast("Peringatan: Tidak ada file JSON yang ditemukan.", "error"); return; }
+            let filesRead = 0;
+            if (mode === 'sync') {
+                let loadedUsers = [];
+                jsonFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try { const json = JSON.parse(e.target.result); if (json.id && json.name && json.pass && !Array.isArray(json)) loadedUsers.push(json); } catch(err) {}
+                        filesRead++;
+                        if (filesRead === jsonFiles.length) {
+                            try { localStorage.setItem('dynamicUsers', JSON.stringify(loadedUsers)); MASTER.users = [...HARDCODED_USERS, ...loadedUsers]; window.closeModal('modal-import-license'); showToast(`Berhasil mensinkronisasi! Sebanyak ${loadedUsers.length} Lisensi MP terdaftar.`, 'success');
+                            } catch(err) { MASTER.users = [...HARDCODED_USERS, ...loadedUsers]; window.closeModal('modal-import-license'); }
+                            hideLoader();
+                        }
+                    }; reader.readAsText(file);
+                });
+            }
+        }
+
+        function login(data) {
+            user = { ...data }; isSpectator = false; document.getElementById('login-page').classList.add('hidden'); 
+            document.getElementById('app-page').classList.remove('hidden'); document.getElementById('floating-monitor').classList.remove('hidden'); 
+            document.getElementById('ui-user').innerText = user.name.toUpperCase(); document.getElementById('ui-shift').innerText = user.shift; 
+            
+            if(isTraining && !user.pros) user.pros = "SIMULASI";
+            const prosSelect = document.getElementById('ui-proses');
+            if (!Array.from(prosSelect.options).some(opt => opt.value === user.pros)) { prosSelect.add(new Option(user.pros, user.pros)); }
+            prosSelect.value = user.pros;
+            
+            const storageKey = `mp_records_cache_${user.id}`;
+            if (!isTraining) { 
+                try { let cachedRecords = JSON.parse(localStorage.getItem(storageKey)) || []; const now = Date.now(); records = cachedRecords.filter(r => (now - new Date(r.time).getTime()) < 172800000); } catch (e) { records = []; } 
+            } else { records = []; } 
+            
+            reactivateInputs(); refreshUI(); 
+            document.getElementById('in-part').focus(); 
+            showToast(`Selamat datang di shift ini, ${user.name.toUpperCase()}!`, 'info');
+        }
+
+        function reactivateInputs() {
+            document.getElementById('in-part').disabled = false;
+            lockForm();
+            document.getElementById('btn-end-shift').classList.remove('hidden'); 
+            document.getElementById('spectator-warning').classList.add('hidden');
+        }
+
+        function activateSpectatorMode() {
+            isSpectator = true;
+            document.getElementById('in-part').disabled = true;
+            lockForm(); 
+            
+            document.getElementById('btn-end-shift').classList.add('hidden'); document.getElementById('spectator-warning').classList.remove('hidden');
+            const actionBtns = document.querySelectorAll('.btn-edit, .btn-delete-row'); actionBtns.forEach(btn => btn.classList.add('hidden'));
+        }
+
+        function processEndShift(shiftRecords, currentSession) {
+            showLoader();
+            setTimeout(() => {
+                const dataStr = JSON.stringify(shiftRecords, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob);
+                const dateOnly = currentSession.split('_')[0]; const fileName = `${user.name.replace(/\s+/g, '_')}_${dateOnly}.json`;
+                const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+                
+                setTimeout(() => { activateSpectatorMode(); hideLoader(); showToast('Shift diakhiri. Data diamankan.', 'success'); }, 2000);
+            }, 50);
+        }
+
+        function endShift() {
+            const currentSession = getSessionIdentifier(new Date()); 
+            const shiftRecords = records.filter(r => getSessionIdentifier(r.time) === currentSession);
+            if(shiftRecords.length === 0) { showToast("Belum ada data WOS yang disave di sesi shift ini.", "error"); return; }
+
+            document.getElementById('confirm-msg').innerText = "Apakah Anda yakin ingin mengakhiri shift dan mengunduh laporan? \n\nSistem akan masuk ke Mode Pengamat (Spectator Mode). Anda TIDAK AKAN BISA memasukkan data baru lagi untuk mencegah penyimpanan ganda.";
+            document.getElementById('btn-confirm-ok').onclick = () => { window.closeModal('modal-confirm'); processEndShift(shiftRecords, currentSession); };
+            window.openModal('modal-confirm');
+        }
+
+        function updateImageSource(imgElement, placeholderElement, labelElement, path, label) {
+            if (!imgElement || !placeholderElement || !labelElement) return;
+            placeholderElement.classList.add('hidden');
+
+            if (!path || path === "") { imgElement.classList.add('hidden'); labelElement.classList.add('hidden'); return; }
+
+            imgElement.src = `sampleImage/${path}`; imgElement.style.cursor = 'zoom-in'; 
+            imgElement.onclick = () => window.openModal('modal-zoom', imgElement.src);
+            
+            imgElement.onload = () => { imgElement.classList.remove('hidden'); labelElement.classList.remove('hidden'); labelElement.innerText = label; };
+            imgElement.onerror = () => { imgElement.classList.add('hidden'); labelElement.classList.add('hidden'); placeholderElement.classList.add('hidden'); };
+        }
+
+        function startCarousel(imgEl, placeholderEl, labelEl, simsArray) {
+            if (carouselIntervalId) { clearInterval(carouselIntervalId); carouselIntervalId = null; }
+            if (!simsArray || simsArray.length === 0) return;
+
+            let idx = 0; updateImageSource(imgEl, placeholderEl, labelEl, simsArray[idx].img, simsArray[idx].pn);
+            if (simsArray.length > 1) {
+                carouselIntervalId = setInterval(() => {
+                    imgEl.style.opacity = '0'; labelEl.style.opacity = '0'; 
+                    setTimeout(() => { idx = (idx + 1) % simsArray.length; updateImageSource(imgEl, placeholderEl, labelEl, simsArray[idx].img, simsArray[idx].pn); imgEl.style.opacity = '1'; labelEl.style.opacity = '1'; }, 600); 
+                }, 3000);
+            }
+        }
+
+        function handleVisualUpdate(val) {
+            const part = MASTER.parts.find(p => p.pn === val);
+            const warningBox = document.getElementById('ui-warning');
+            if (carouselIntervalId) { clearInterval(carouselIntervalId); carouselIntervalId = null; } 
+
+            if(part) {
+                updateImageSource(document.getElementById('view-a'), document.getElementById('view-a-ph'), document.getElementById('ui-label-part-a'), part.img1, part.pn); 
+                startCarousel(document.getElementById('view-b'), document.getElementById('view-b-ph'), document.getElementById('ui-label-part-b'), part.sims);
+
+                document.getElementById('ui-part-name').innerText = part.pn; document.getElementById('ui-part-loc').innerText = part.loc; 
+                document.getElementById('view-b-container').classList.add('similar-part-highlight'); document.getElementById('view-a-container').classList.add('correct-part-highlight');
+                document.getElementById('badge-ok').classList.remove('hidden'); document.getElementById('badge-ng').classList.remove('hidden');
+                
+                warningBox.className = 'warning-flashing'; warningBox.innerHTML = '⚠ HATI-HATI MATERIAL SERUPA<br>PASTIKAN PART ACCESSORIES SESUAI DENGAN WOS!';
+            } else {
+                document.getElementById('view-a').classList.add('hidden'); document.getElementById('view-a-ph').classList.remove('hidden'); document.getElementById('ui-label-part-a').classList.add('hidden'); 
+                document.getElementById('view-b').classList.add('hidden'); document.getElementById('view-b-ph').classList.remove('hidden'); document.getElementById('ui-label-part-b').classList.add('hidden');
+                
+                document.getElementById('ui-part-name').innerText = '-'; document.getElementById('ui-part-loc').innerText = '-'; 
+                document.getElementById('view-b-container').classList.remove('similar-part-highlight'); document.getElementById('view-a-container').classList.remove('correct-part-highlight');
+                document.getElementById('badge-ok').classList.add('hidden'); document.getElementById('badge-ng').classList.add('hidden');
+                
+                warningBox.className = 'warning-standby'; warningBox.innerHTML = 'STANDBY - MENUNGGU PART NO';
+            }
         }
 
         function showLoader() { document.getElementById('global-loader').classList.remove('hidden'); }
@@ -640,520 +945,181 @@
         window.openModal = function(id, imgSrc) { document.getElementById(id).style.display = 'flex'; if(imgSrc && id === 'modal-zoom') document.getElementById('zoom-img').src = imgSrc; };
         window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
 
-        function getLogicalDate(timestamp) { const date = new Date(timestamp), jam = date.getHours(), menit = date.getMinutes(); if (jam < 7 || (jam === 7 && menit < 30)) { date.setDate(date.getDate() - 1); } return date; }
-        function getShiftDateISO(timestamp) { const date = getLogicalDate(timestamp), y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
-        function getSessionIdentifier(timestamp) {
-            const date = new Date(timestamp);
-            const jam = date.getHours();
-            
-            // Buat salinan tanggal agar tidak mengubah data waktu aslinya
-            const logicalDate = new Date(timestamp);
-            
-            // LOGIKA HARI BERBEDA:
-            // Jika waktu masih di bawah jam 06:00 pagi, sistem menganggapnya 
-            // masih merupakan bagian dari "hari kemarin" (sesi login sebelumnya).
-            // Jadi jika MP kerja melebihi jam 12 malam, output tidak akan tereset.
-            if (jam < 6) {
-                logicalDate.setDate(logicalDate.getDate() - 1);
-            }
-            
-            const y = logicalDate.getFullYear();
-            const m = String(logicalDate.getMonth() + 1).padStart(2, '0');
-            const d = String(logicalDate.getDate()).padStart(2, '0');
-            
-            // Mengembalikan identitas tanggal produksi
-            return `${y}-${m}-${d}_PRODUKSI`;
+        function logout() { isIntentionalExit = true; location.reload(); }
+        function changeProcess(newPros) { user.pros = newPros; refreshUI(); }
+        
+        window.openLicenseListModal = function() {
+            const listEl = document.getElementById('license-list-container'); listEl.innerHTML = '';
+            MASTER.users.forEach(u => {
+                listEl.innerHTML += `<div style="padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 800; color: var(--text-main); font-size: 13px;">${u.name}</span><span style="font-size: 10px; color: white; background: var(--primary); padding: 2px 8px; border-radius: 8px; font-weight: 900;">ID: ${u.id}</span></div>`;
+            });
+            if(MASTER.users.length === 0) listEl.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600;">Belum ada lisensi terdaftar.<br>Silakan tambah atau upload.</div>`;
+            window.openModal('modal-license-list');
+        };
+
+        window.openAddLicenseModal = function() { window.closeModal('modal-license-list'); window.openModal('modal-add-license'); };
+
+        window.submitNewLicense = function() {
+            const id = document.getElementById('new-lic-id').value.trim(); const name = document.getElementById('new-lic-name').value.trim(); const pass = document.getElementById('new-lic-pass').value.trim();
+            const shift = document.getElementById('new-lic-shift').value; const pros = document.getElementById('new-lic-pros').value;
+            if(!id || !name || !pass) { showToast('Harap isi semua kolom wajib!', 'error'); return; }
+            if(MASTER.users.find(u => u.id === id)) { showToast('ID Lisensi sudah terdaftar!', 'error'); return; }
+            const newUser = { id, name, pass, shift: shift, kat: "MP", pros: pros };
+            let dynamicUsers = []; try { dynamicUsers = JSON.parse(localStorage.getItem('dynamicUsers') || '[]'); } catch(e){}
+            dynamicUsers.push(newUser); localStorage.setItem('dynamicUsers', JSON.stringify(dynamicUsers)); MASTER.users.push(newUser);
+            const dataStr = JSON.stringify(newUser, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob);
+            const fileName = `LISENSI_${id.replace(/[^a-zA-Z0-9]/g, '_')}.json`; const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+            document.getElementById('new-lic-id').value = ''; document.getElementById('new-lic-name').value = ''; document.getElementById('new-lic-pass').value = '';
+            showToast('Lisensi baru disimpan & file berhasil diunduh!', 'success'); window.closeModal('modal-add-license'); window.openLicenseListModal();
+        };
+
+        window.openTrainingListModal = function() {
+            const listEl = document.getElementById('training-list-container'); listEl.innerHTML = '';
+            trainingUsersList.forEach(name => {
+                listEl.innerHTML += `<div onclick="loginAsTraining('${name}')" style="padding: 14px 12px; border-bottom: 1px solid var(--border); font-weight: 800; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;" onmouseover="this.style.background='var(--bg-body)'; this.style.color='var(--primary)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-main)';">${name} <span style="float: right; color: var(--primary);">➔</span></div>`;
+            });
+            if(trainingUsersList.length === 0) listEl.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600;">Belum ada riwayat training.</div>`;
+            window.openModal('modal-training-list');
+        };
+
+        window.loginAsTraining = function(name) { window.closeModal('modal-training-list'); isTraining = true; executeWithLoader(() => login({ id: "TRAINING", name: name + " (TRN)", shift: "T", kat: "EDU", pros: "SIMULASI" })); };
+        window.startTraining = function() { window.closeModal('modal-training-list'); window.openModal('modal-training'); document.getElementById('in-training-name').focus(); };
+        window.submitTrainingName = function() { let tName = document.getElementById('in-training-name').value.trim(); if (!tName) tName = "PESERTA TRAINING"; if(!trainingUsersList.includes(tName)) { trainingUsersList.push(tName); localStorage.setItem('trainingUsers', JSON.stringify(trainingUsersList)); } isTraining = true; window.closeModal('modal-training'); executeWithLoader(() => login({ id: "TRAINING", name: tName + " (TRN)", shift: "T", kat: "EDU", pros: "SIMULASI" })); };
+
+        window.submitNewPart = function() {
+            const pn = document.getElementById('new-part-no').value.trim().toUpperCase();
+            if(!pn) { showToast('Part No tidak boleh kosong!', 'error'); return; }
+            if(MASTER.parts.find(p => p.pn.toUpperCase() === pn)) { showToast('Part No sudah terdaftar!', 'error'); return; }
+            const newPart = { pn: pn, loc: "MANUAL INPUT", img1: "", sims: [] };
+            MASTER.parts.push(newPart);
+            let customParts = []; try { customParts = JSON.parse(localStorage.getItem('customParts') || '[]'); } catch(e){} customParts.push(newPart); localStorage.setItem('customParts', JSON.stringify(customParts));
+            refreshDatalists(); document.getElementById('new-part-no').value = ''; window.closeModal('modal-add-part'); showToast('Part No baru berhasil disimpan!', 'success');
+        };
+
+        function handleGlobalSearch(val) {
+            executeWithLoader(() => {
+                const part = MASTER.parts.find(p => p.pn === val);
+                if (part) {
+                    window.openModal('modal-search');
+                    let simPath = part.sims && part.sims.length > 0 ? part.sims[0].img : ""; let simLabel = part.sims && part.sims.length > 0 ? part.sims[0].pn : "COMPARE";
+                    updateImageSource(document.getElementById('search-img-part'), document.getElementById('search-img-part-ph'), document.getElementById('search-label-part-a'), part.img1, part.pn); 
+                    updateImageSource(document.getElementById('search-img-loc'), document.getElementById('search-img-loc-ph'), document.getElementById('search-label-part-b'), simPath, simLabel);
+                    document.getElementById('search-ui-pn').innerText = part.pn; document.getElementById('search-ui-loc').innerText = part.loc; document.getElementById('search-ui-warning').classList.remove('hidden'); document.getElementById('search-img-b-container').classList.add('similar-part-highlight'); document.getElementById('search-img-a-container').classList.add('correct-part-highlight'); document.getElementById('search-badge-ok').classList.remove('hidden'); document.getElementById('search-badge-ng').classList.remove('hidden'); document.getElementById('global-search').value = ''; document.getElementById('global-search').blur();
+                }
+            });
         }
-        function getTargetByProcess(prosRaw) { let p = String(prosRaw).toUpperCase(); if (p.includes('SMV')) return 850; if (p.includes('PROJECT') || p.includes('WC')) return 2000; return 4000; }
-
-        // ==========================================
-        // 5. LOCK & UNLOCK SYSTEM
-        // ==========================================
-        window.lockForm = function() {
-            const overlay = document.getElementById('form-overlay'); if (overlay) overlay.classList.remove('hidden');
-            const formCard = document.getElementById('form-card'); if (formCard) formCard.style.opacity = '0.6';
-            const status = document.getElementById('lock-status');
-            if (status) { status.innerHTML = 'NO PROSES'; status.style.background = '#fee2e2'; status.style.color = 'var(--danger)'; }
-            
-            // Qty TETAP TERBUKA
-            ['in-assy', 'in-cct', 'in-wp'].forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = true; el.style.opacity = "0.6"; } });
-            
-            const btnSubmit = document.getElementById('btn-submit'); if(btnSubmit) btnSubmit.disabled = true;
-            closeKeyboard(); 
-        };
-
-        window.unlockForm = function() {
-            if(isSpectator) return;
-            const overlay = document.getElementById('form-overlay'); if (overlay) overlay.classList.add('hidden');
-            const formCard = document.getElementById('form-card'); if (formCard) formCard.style.opacity = '1';
-            const status = document.getElementById('lock-status');
-            if (status) { status.innerHTML = 'SEDANG PROSES'; status.style.background = 'var(--success)'; status.style.color = 'white'; }
-            
-            ['in-assy', 'in-cct', 'in-wp', 'in-qty'].forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = false; el.style.opacity = "1"; } });
-            checkFormCompleteness(); 
-        };
-
+        
+        window.closeSearchModal = function() { window.closeModal('modal-search'); document.getElementById('search-img-b-container').classList.remove('similar-part-highlight'); document.getElementById('search-img-a-container').classList.remove('correct-part-highlight'); document.getElementById('search-badge-ok').classList.add('hidden'); document.getElementById('search-badge-ng').classList.add('hidden'); };
+        
         window.clearInputs = function() { 
-            ['in-assy', 'in-cct', 'in-wp', 'in-qty'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); 
-            consecutiveSaves = 0; lastSavedAssy = ""; 
-            unlockForm(); 
-            
+            ['in-serial-a', 'in-serial-b'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
             const partInput = document.getElementById('in-part');
-            if (partInput && partInput.value.trim() !== "") { const assyInput = document.getElementById('in-assy'); if (assyInput && !assyInput.disabled) { assyInput.focus(); } } 
+            if (partInput && partInput.value.trim() !== "") { const serA = document.getElementById('in-serial-a'); if (serA && !serA.disabled) { serA.focus(); } } 
             else { lockForm(); if (partInput) partInput.focus(); }
         };
 
-        // ==========================================
-        // 6. FIREBASE CRUD (EDIT/DELETE/SAVE)
-        // ==========================================
-        async function updateSummary(date, qtyChange, countChange) {
-            if(isTraining) return;
-            try { await db.collection('daily_summary').doc(date).set({ totalQty: firebase.firestore.FieldValue.increment(qtyChange), recordCount: firebase.firestore.FieldValue.increment(countChange), lastUpdated: new Date().toISOString() }, { merge: true }); } 
-            catch (e) { console.error("Summary update failed", e); }
-        }
-
-        window.startEdit = function(bucketId, timeStr) {
+        window.startEdit = function(id) {
             if(isSpectator) return;
-            // Gunakan timeStr untuk mencari data yang BENAR-BENAR ada, tidak perlu via JSON di HTML!
-            const recordData = records.find(r => r.time === timeStr);
-            if(!recordData) { showToast("Data tidak ditemukan!", "error"); return; }
-            
-            currentEditBucketId = bucketId; oldRecordData = recordData;
-
-            document.getElementById('in-assy').value = recordData.assy;
-            document.getElementById('in-cct').value = recordData.cct;
-            document.getElementById('in-part').value = recordData.part;
-            document.getElementById('in-wp').value = recordData.wp;
-            document.getElementById('in-qty').value = recordData.qty;
-
-            document.getElementById('ui-form-title').innerText = "⚠ MODE EDIT";
-            document.getElementById('ui-form-title').style.color = "var(--warning)"; 
-            document.getElementById('btn-submit').innerText = "UPDATE DATA";
-            document.getElementById('btn-submit').className = "btn btn-update"; 
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            
-            unlockForm(); document.getElementById('in-qty').focus(); window.scrollTo({ top: 0, behavior: 'smooth' });
+            const record = records.find(r => r.id === id); if (!record) return; editingId = id;
+            document.getElementById('in-part').value = record.part; 
+            // Karena ini dual scan, kita letakkan saja diedit di A (bisa di B juga jika mau kompleks, tapi kita taro di A default)
+            document.getElementById('in-serial-a').value = record.serial;
+            document.getElementById('ui-form-title').innerText = "⚠ MODE EDIT (Tekan ENTER di Scan)"; document.getElementById('ui-form-title').style.color = "var(--warning)"; document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            onPartInputLive(record.part); document.getElementById('in-serial-a').focus(); window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-
+        
         window.cancelEdit = function() { 
-            currentEditBucketId = null; oldRecordData = null;
-            document.getElementById('btn-submit').innerText = "ENTER"; 
-            document.getElementById('btn-submit').className = "btn btn-primary"; 
-            document.getElementById('ui-form-title').innerText = "Input Data"; 
-            document.getElementById('ui-form-title').style.color = "var(--text-main)"; 
-            document.getElementById('btn-cancel-edit').classList.add('hidden'); 
-            window.clearInputs(); 
+            editingId = null; document.getElementById('ui-form-title').innerText = "Scan Serial WOS"; document.getElementById('ui-form-title').style.color = "var(--text-main)"; document.getElementById('btn-cancel-edit').classList.add('hidden'); window.clearInputs(); 
+        };
+        
+        window.deleteLog = function(id) { 
+            if(isSpectator) return;
+            executeWithLoader(() => { records = records.filter(r => r.id !== id); if (!isTraining) localStorage.setItem(`mp_records_cache_${user.id}`, JSON.stringify(records)); refreshUI(); });
         };
 
-        window.deleteRecord = async function(bucketId, timeStr) {
-            if (!confirm("Hapus data ini?")) return;
-            showLoader();
-            try {
-                const recordData = records.find(r => r.time === timeStr);
-                if(!recordData) throw new Error("Data not found");
-
-                if(!isTraining) {
-                    const dateString = recordData.date; 
-                    const bucketRef = db.collection('reports').doc(dateString).collection('buckets').doc(bucketId);
-
-                    const dataToRemove = { ...recordData }; delete dataToRemove.bucketId; 
-
-                    await bucketRef.update({
-                        entries: firebase.firestore.FieldValue.arrayRemove(dataToRemove),
-                        entryCount: firebase.firestore.FieldValue.increment(-1)
-                    });
-                    await updateSummary(dateString, -Number(recordData.qty), -1);
-                }
-                
-                showToast('Data berhasil dihapus!', 'success');
-                refreshUI();
-            } catch (error) { showToast('Gagal menghapus data.', 'error'); } 
-            finally { hideLoader(); }
-        };
-
-        // Deklarasi counter global untuk Qty kecil (taruh di luar/atas fungsi)
-        if (typeof window.confirmSmallQtyCounter === 'undefined') {
-            window.confirmSmallQtyCounter = 0;
-        }
-
-        window.handleSave = async function() {
-            if (isSpectator) return;
-            const data = {
-                assy: document.getElementById('in-assy').value, 
-                cct: document.getElementById('in-cct').value, 
-                part: document.getElementById('in-part').value, 
-                wp: document.getElementById('in-wp').value,
-                qty: parseInt(document.getElementById('in-qty').value), 
-                time: new Date().toISOString(), 
-                date: getShiftDateISO(new Date()),
-                userId: user.id, 
-                userName: user.name, 
-                userShift: user.shift, 
-                userPros: user.pros
-            };
-
-            if (!data.assy || !data.part || !data.qty) return;
-            if (!MASTER.parts.some(p => p.pn === data.part)) { 
-                showToast('GAGAL SIMPAN: Part No tidak terdaftar!', 'error'); 
-                lockForm(); 
-                return; 
-            }
-
-            showLoader();
-            try {
-                if (currentEditBucketId) {
-                    if(!isTraining) {
-                        const bRef = db.collection('reports').doc(data.date).collection('buckets').doc(currentEditBucketId);
-                        const snap = await bRef.get();
-                        if (snap.exists) {
-                            let entries = snap.data().entries;
-                            const idx = entries.findIndex(e => e.time === oldRecordData.time);
-                            if (idx !== -1) {
-                                const qtyDiff = data.qty - entries[idx].qty;
-                                data.time = oldRecordData.time; data.date = oldRecordData.date;
-                                entries[idx] = data;
-                                await bRef.update({ entries: entries });
-                                await updateSummary(data.date, qtyDiff, 0);
-                            }
-                        }
-                    }
-                    showToast('Data berhasil diperbarui!', 'success');
-                    cancelEdit();
-                } else {
-                    if (data.assy === lastSavedAssy) { consecutiveSaves += multiplier; } else { consecutiveSaves = multiplier; lastSavedAssy = data.assy; }
-                    
-                    if(!isTraining) {
-                        const bucketRef = db.collection('reports').doc(data.date).collection('buckets');
-                        const openBuckets = await bucketRef.where('status', '==', 'open').limit(1).get();
-                        let bRef = !openBuckets.empty ? openBuckets.docs[0].ref : await bucketRef.add({ status: 'open', entries: [], entryCount: 0 });
-
-                        let dataArr = []; 
-                        for(let i=0; i < multiplier; i++) { dataArr.push({ ...data, time: new Date(Date.now() + i).toISOString() }); }
-                        
-                        await bRef.update({ 
-                            entries: firebase.firestore.FieldValue.arrayUnion(...dataArr), 
-                            entryCount: firebase.firestore.FieldValue.increment(multiplier) 
-                        });
-                        await updateSummary(data.date, data.qty * multiplier, multiplier);
-                        
-                        const checkSnap = await bRef.get(); 
-                        if (checkSnap.data().entryCount >= 500) await bRef.update({ status: 'closed' });
-                    }
-                    multiplier = 1; 
-                    document.getElementById('ui-multiplier').innerText = ''; 
-                    showToast('Data berhasil disimpan!', 'success');
-                }
-                
-                unlockForm(); 
-                
-            } catch (err) { 
-                showToast('Gagal menyambung ke server!', 'error'); 
-                console.error(err);
-            } 
-            finally { 
-                hideLoader(); 
-            }
-
-            refreshUI();
-
-            // --- [MULAI KODE POKA-YOKE KONFIRMASI (WINDOW CARD)] ---
-            // Hanya dieksekusi saat input data baru (bukan saat edit)
-            if (!currentEditBucketId) {
-                if (data.qty >= 20 && data.qty <= 100) {
-                    showConfirmationModal(data.part); // Muncul otomatis
-                } else if (data.qty >= 3 && data.qty <= 19) {
-                    window.confirmSmallQtyCounter++;
-                    if (window.confirmSmallQtyCounter >= 15) {
-                        showConfirmationModal(data.part);
-                        window.confirmSmallQtyCounter = 0; // Reset counter setelah muncul
-                    }
-                }
-            }
-            // --- [SELESAI KODE POKA-YOKE] ---
-
-            // Proses reset field UI
-            if (consecutiveSaves >= 50) {
-                ['in-assy', 'in-cct', 'in-wp', 'in-qty'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-                consecutiveSaves = 0; 
-                lastSavedAssy = ""; 
-                unlockForm(); 
-                document.getElementById('in-assy').focus(); 
-                showToast('Circuit Breaker (50x): Form di-reset.', 'info');
-            } else { 
-                document.getElementById('in-qty').value = ''; 
-                checkFormCompleteness(); 
-                
-                // Cek jika modal poka-yoke TIDAK TERBUKA, kembalikan fokus ke qty
-                // (Jika terbuka, modal yang akan mengembalikan fokus setelah 5 detik)
-                if (document.getElementById('modal-confirmation').style.display !== 'flex') {
-                    document.getElementById('in-qty').focus(); 
-                }
-            }
+        function refreshUI() {
+            const currentSession = getSessionIdentifier(new Date()); 
+            const shiftRecords = records.filter(r => getSessionIdentifier(r.time) === currentSession);
             
-            closeKeyboard();
-        };
-
-        window.refreshUI = async function() {
-            const dateString = getShiftDateISO(new Date());
-            let shiftRecords = [];
+            // Output dihitung dari total QTY (Pcs)
+            const total = shiftRecords.reduce((sum, r) => sum + (Number(r.qty) || 1), 0); 
+            const target = getTargetByProcess(user.pros);
+            const targetHourly = Math.round(target / 8);
             
-            if(!isTraining) {
-                try {
-                    const snapshot = await db.collection('reports').doc(dateString).collection('buckets').get();
-                    snapshot.forEach(doc => {
-                        const bucket = doc.data();
-                        if (bucket.entries) {
-                            const filtered = bucket.entries.filter(r => r.userId === user.id);
-                            filtered.forEach(r => shiftRecords.push({...r, bucketId: doc.id}));
-                        }
-                    });
-                } catch(e) {}
-            }
-            
-            shiftRecords.sort((a, b) => new Date(b.time) - new Date(a.time));
-            records = shiftRecords;
-
-            const total = shiftRecords.reduce((s, r) => s + Number(r.qty), 0), target = getTargetByProcess(user.pros), targetHourly = Math.round(target / 8), percent = Math.round((total / target) * 100);
-
+            const percent = Math.round((total / target) * 100);
             document.getElementById('ui-total').innerText = total; document.getElementById('ui-target').innerText = target; document.getElementById('ui-target-hourly').innerText = targetHourly;
             document.getElementById('ui-gap').innerText = total >= target ? "OK" : (total - target); document.getElementById('ui-gap').style.color = total >= target ? 'var(--success)' : 'var(--danger)';
             document.getElementById('ui-percent').innerText = percent + '%'; document.getElementById('ui-progress-bar').style.width = Math.min(100, percent) + '%'; 
-            document.getElementById('ui-progress-bar').style.background = percent >= 100 ? 'var(--success)' : 'var(--primary)'; document.getElementById('ui-percent').style.color = percent >= 100 ? 'var(--success)' : 'var(--primary)';
-            document.getElementById('ui-count').innerText = shiftRecords.length + ' WOS';
-
-            const body = document.getElementById('main-table-body');
-            if(body) {
-                let htmlBatch = '';
-                shiftRecords.forEach(r => {
-                    // MENGIRIM WAKTU (STRING) UNTUK EDIT/HAPUS - Mencegah error "not defined"
-                    htmlBatch += `<tr>
-                        <td style="font-weight:600;">${r.assy}</td><td>${r.cct}</td><td style="font-weight:600;">${r.part}</td><td>${r.wp}</td>
-                        <td style="text-align:center; font-weight:900; color:var(--primary); font-size:14px;">${r.qty}</td>
-                        <td style="font-size:11px; opacity:0.7;">${new Date(r.time).toLocaleTimeString()}</td>
-                        <td style="text-align:right; white-space:nowrap;">
-                            <button onclick="startEdit('${r.bucketId}', '${r.time}')" class="btn btn-edit ${isSpectator ? 'hidden' : ''}">EDIT</button>
-                            <button onclick="deleteRecord('${r.bucketId}', '${r.time}')" class="btn btn-delete-row ${isSpectator ? 'hidden' : ''}">HAPUS</button>
-                        </td>
-                    </tr>`;
-                });
-                body.innerHTML = htmlBatch;
+            
+            if(percent >= 100) { document.getElementById('ui-progress-bar').style.background = 'var(--success)'; document.getElementById('ui-percent').style.color = 'var(--success)'; }
+            else { document.getElementById('ui-progress-bar').style.background = 'var(--primary)'; document.getElementById('ui-percent').style.color = 'var(--primary)'; }
+            
+            document.getElementById('ui-count').innerText = total + ' Pcs';
+            const body = document.getElementById('main-table-body'); let htmlBatch = ''; const renderLimit = Math.min(shiftRecords.length, 30); 
+            
+            for (let i = 0; i < renderLimit; i++) {
+                const r = shiftRecords[i];
+                let actionBtns = `<button onclick="startEdit(${r.id})" class="btn btn-edit ${isSpectator ? 'hidden' : ''}">EDIT</button><button onclick="deleteLog(${r.id})" class="btn btn-delete-row ${isSpectator ? 'hidden' : ''}">HAPUS</button>`;
+                htmlBatch += `<tr><td style="font-weight:600;">${r.assy || '-'}</td><td>${r.cct || '-'}</td><td style="font-weight:600; color:var(--primary);">${r.part}</td><td style="text-align:center; font-weight:900;">${r.qty || 1}</td><td style="font-size:11px; opacity:0.7;">${new Date(r.time).toLocaleTimeString()}</td><td style="text-align:right; white-space:nowrap;">${actionBtns}</td></tr>`; 
             }
-        };
-
-        // ==========================================
-        // 7. SISTEM LAINNYA (ARSIP & LOGIN)
-        // ==========================================
-        window.renderArchiveTable = async function() { 
-            const targetStr = document.getElementById('arc-date').value; if (!targetStr) return;
-            showLoader();
-            try {
-                let arcRecords = [];
-                if(!isTraining) {
-                    const snapshot = await db.collection('reports').doc(targetStr).collection('buckets').get();
-                    snapshot.forEach(doc => { const b = doc.data(); if(b.entries) { arcRecords = arcRecords.concat(b.entries.filter(r => r.userId === user.id)); } });
-                }
-                arcRecords.sort((a, b) => new Date(b.time) - new Date(a.time));
-                arcFilteredData = arcRecords; arcCurrentPage = 1;
-                document.getElementById('arc-total').innerText = arcFilteredData.reduce((s, r) => s + Number(r.qty), 0); document.getElementById('arc-wos-count').innerText = arcFilteredData.length + ' WOS';
-                displayArcPage();
-            } catch(e) { showToast("Gagal memuat arsip", "error"); } finally { hideLoader(); }
+            if (shiftRecords.length > 30) { htmlBatch += `<tr><td colspan="6" style="text-align:center; font-size:10px; opacity:0.5; padding: 10px;">... ${shiftRecords.length - 30} data terdahulu disembunyikan agar komputer ringan ...</td></tr>`; }
+            body.innerHTML = htmlBatch; 
         }
 
-        window.exportArchiveJSON = function() {
-            const targetStr = document.getElementById('arc-date').value; if (!targetStr) { showToast("Pilih tanggal terlebih dahulu.", "error"); return; }
-            if(arcFilteredData.length === 0) { showToast("Tidak ada data untuk diunduh.", "error"); return; }
-            const blob = new Blob([JSON.stringify(arcFilteredData, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob);
-            const a = document.createElement("a"); a.href = url; a.download = `${user.name.replace(/\s+/g, '_')}_${targetStr}.json`; a.click(); URL.revokeObjectURL(url);
+        window.openMultiplier = function(e) { if (e) e.preventDefault(); window.openModal('modal-mul'); document.getElementById('in-mul').focus(); };
+        window.applyMultiplier = function() { multiplier = parseInt(document.getElementById('in-mul').value) || 1; document.getElementById('ui-multiplier').innerText = multiplier > 1 ? `(x${multiplier})` : ''; window.closeModal('modal-mul'); };
+        
+        window.openArchive = function(show) { 
+            if(show) { window.openModal('modal-arc'); document.getElementById('arc-date').value = getShiftDateISO(new Date()); executeWithLoader(renderArchiveTable); } 
+            else { window.closeModal('modal-arc'); } 
         };
+
+        function renderArchiveTable() { 
+            const targetStr = document.getElementById('arc-date').value; if (!targetStr) return;
+            const filtered = records.filter(r => { return getShiftDateISO(r.time) === targetStr; }); filtered.sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            arcFilteredData = filtered; arcCurrentPage = 1;
+            
+            const totalPcs = filtered.reduce((sum, r) => sum + (Number(r.qty) || 1), 0);
+            document.getElementById('arc-total').innerText = totalPcs; 
+            document.getElementById('arc-wos-count').innerText = filtered.length + ' Baris WOS';
+            displayArcPage();
+        }
 
         function displayArcPage() {
             const body = document.getElementById('archive-table-body'); const paginationUI = document.getElementById('arc-pagination');
             if (!body) return; body.innerHTML = ''; 
-            if(arcFilteredData.length === 0) { body.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; opacity: 0.5;">Tidak ada riwayat pada tanggal ini.</td></tr>'; paginationUI.classList.add('hidden'); return; } 
+            
+            if(arcFilteredData.length === 0) { body.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; opacity: 0.5;">Tidak ada riwayat pada tanggal ini.</td></tr>'; paginationUI.classList.add('hidden'); return; } 
             
             paginationUI.classList.remove('hidden');
             const startIndex = (arcCurrentPage - 1) * ARC_PER_PAGE; const endIndex = startIndex + ARC_PER_PAGE; const paginatedItems = arcFilteredData.slice(startIndex, endIndex);
 
             let arcHtmlBatch = ''; 
-            paginatedItems.forEach(r => { arcHtmlBatch += `<tr><td style="font-weight:600;">${r.assy}</td><td>${r.cct}</td><td style="font-weight:600;">${r.part}</td><td style="text-align:center; font-weight:900; color:var(--primary); font-size:14px;">${r.qty}</td><td style="font-size:11px; opacity:0.7;">${new Date(r.time).toLocaleString('id-ID')}</td></tr>`; });
+            paginatedItems.forEach(r => { arcHtmlBatch += `<tr><td style="font-family: monospace;">${r.serial}</td><td style="font-weight:600;">${r.assy || '-'}</td><td>${r.cct || '-'}</td><td style="font-weight:600;">${r.part}</td><td style="text-align:center;">${r.qty || 1}</td><td style="font-size:11px; opacity:0.7;">${new Date(r.time).toLocaleString('id-ID')}</td></tr>`; });
             body.innerHTML = arcHtmlBatch;
             
             const totalPages = Math.ceil(arcFilteredData.length / ARC_PER_PAGE) || 1; document.getElementById('arc-page-info').innerText = `Halaman ${arcCurrentPage} dari ${totalPages}`;
             document.getElementById('btn-arc-prev').disabled = arcCurrentPage === 1; document.getElementById('btn-arc-next').disabled = arcCurrentPage === totalPages;
         }
 
-        window.changeArcPage = function(delta) { const totalPages = Math.ceil(arcFilteredData.length / ARC_PER_PAGE) || 1; arcCurrentPage += delta; if (arcCurrentPage < 1) arcCurrentPage = 1; if (arcCurrentPage > totalPages) arcCurrentPage = totalPages; displayArcPage(); };
-
-        window.endShift = function() {
-            document.getElementById('confirm-msg').innerText = "Apakah Anda yakin ingin mengakhiri shift?\n\nSistem akan masuk ke Mode Pengamat (Spectator Mode).";
-            document.getElementById('btn-confirm-ok').onclick = () => { 
-                window.closeModal('modal-confirm'); showLoader();
-                setTimeout(() => { activateSpectatorMode(); hideLoader(); showToast('Shift diakhiri. Data telah aman di server.', 'success'); }, 1000);
-            };
-            window.openModal('modal-confirm');
-        }
-
-        function activateSpectatorMode() {
-            isSpectator = true;
-            ['in-part','in-assy','in-cct','in-wp','in-qty'].forEach(id => document.getElementById(id).disabled = true);
-            lockForm(); 
-            const btnSubmit = document.getElementById('btn-submit'); btnSubmit.innerText = "SHIFT BERAKHIR (TERKUNCI)"; btnSubmit.className = "btn"; btnSubmit.style.background = 'var(--border)'; btnSubmit.style.color = 'var(--text-muted)';
-            document.getElementById('btn-end-shift').classList.add('hidden'); document.getElementById('spectator-warning').classList.remove('hidden');
-            document.querySelectorAll('.btn-edit, .btn-delete-row').forEach(btn => btn.classList.add('hidden')); closeKeyboard();
-        }
-
-        // --- Keyboard, Carousel & Validasi Dibiarkan Sama Sesuai Kode Asli Anda ---
-        function checkFormCompleteness() {
-            if (isSpectator) return;
-            const assy = document.getElementById('in-assy').value.trim(), cct = document.getElementById('in-cct').value.trim(), wp = document.getElementById('in-wp').value.trim(), qtyStr = document.getElementById('in-qty').value, qty = parseInt(qtyStr), btnSubmit = document.getElementById('btn-submit'), qtyEl = document.getElementById('in-qty');
-            let isQtyValid = false;
-            if (qtyStr !== "") {
-                if (qty > 100) { qtyEl.style.color = 'var(--danger)'; qtyEl.style.borderColor = 'var(--danger)'; qtyEl.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.1)'; } 
-                else if (qty > 0) { qtyEl.style.color = 'var(--text-main)'; qtyEl.style.borderColor = 'var(--primary)'; qtyEl.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)'; isQtyValid = true; }
-            } else { qtyEl.style.color = 'var(--text-main)'; qtyEl.style.borderColor = 'var(--border)'; qtyEl.style.boxShadow = 'none'; }
-            btnSubmit.disabled = !(assy && cct && wp && isQtyValid);
-        }
-
-        function onPartInputLive(val) {
-            handleVisualUpdate(val);
-            const exactMatch = MASTER.parts.find(p => p.pn.toUpperCase() === val.trim().toUpperCase());
-            if (exactMatch) {
-                if (lastValidPart !== "" && lastValidPart !== exactMatch.pn && !currentEditBucketId) {
-                    ['in-assy', 'in-cct', 'in-wp', 'in-qty'].forEach(id => document.getElementById(id).value = ''); consecutiveSaves = 0; showToast('Material baru terdeteksi. Form di-reset.', 'info');
-                }
-                lastValidPart = exactMatch.pn; unlockForm(); 
-            } else { lockForm(); }
-        }
-
-        // ==========================================
-        // 8. ONLOAD & KEYBOARD EVENTS
-        // ==========================================
-        window.onload = () => {
-            let dynamicUsers = []; try { dynamicUsers = JSON.parse(localStorage.getItem('dynamicUsers') || '[]'); } catch (e) {}
-            MASTER.users = [...HARDCODED_USERS, ...dynamicUsers];
-            try { let customParts = JSON.parse(localStorage.getItem('customParts') || '[]'); if(customParts.length > 0) MASTER.parts = [...MASTER.parts, ...customParts]; } catch (e) {}
-            try { let customAssy = JSON.parse(localStorage.getItem('customAssy') || '[]'); if(customAssy.length > 0) MASTER.assy = [...MASTER.assy, ...customAssy]; } catch (e) {}
-            try { trainingUsersList = JSON.parse(localStorage.getItem('trainingUsers') || '[]'); } catch (e) {}
-
-            document.querySelectorAll('.input').forEach(input => { input.addEventListener('focus', function() { if (typeof this.select === 'function') { this.select(); } }); });
-            refreshDatalists();
-            
-            document.getElementById('login-form').onsubmit = (e) => {
-                e.preventDefault();
-                const u = document.getElementById('login-username').value, p = document.getElementById('login-password').value;
-                const match = MASTER.users.find(x => x.id === u && x.pass === p);
-                if(match || (u === 'admin' && p === 'admin')) { isTraining = false; executeWithLoader(() => login(match || { id: "ADMIN", name: "Administrator", shift: "A", kat: "ADM", pros: "ACC REGULAR" })); }
-                else showToast("Lisensi ID atau Password Salah.", "error");
-            };
-
-            const seq = ['in-part', 'in-assy', 'in-cct', 'in-wp', 'in-qty'];
-            seq.forEach((id, i) => { 
-                const el = document.getElementById(id); 
-                if (el) {
-                    el.onkeydown = (e) => { 
-                        if (e.key === 'Enter') { 
-                            e.preventDefault(); 
-                            if (id === 'in-qty') {
-                                const btnSubmit = document.getElementById('btn-submit');
-                                if (!btnSubmit.disabled) { handleSave(); } else {
-                                    const qtyVal = parseInt(document.getElementById('in-qty').value);
-                                    if (qtyVal > 100) showToast('Maksimal Qty adalah 100!', 'error'); else showToast('Lengkapi form!', 'error');
-                                }
-                            } else if (id === 'in-part') {
-                                let val = el.value.trim().toUpperCase();
-                                if (val) {
-                                    const match = MASTER.parts.find(p => p.pn.toUpperCase().startsWith(val) || p.pn.toUpperCase().includes(val));
-                                    if (match) { el.value = match.pn; onPartInputLive(match.pn); if (seq[i+1]) document.getElementById(seq[i+1]).focus(); } 
-                                    else { showToast('Part No tidak terdaftar!', 'error'); onPartInputLive(''); el.focus(); el.select(); }
-                                }
-                            } else if (id === 'in-assy') {
-                                let val = el.value.trim().toUpperCase();
-                                if (val) { const match = MASTER.assy.find(a => a.toUpperCase().startsWith(val) || a.toUpperCase().includes(val)); if (match) el.value = match; }
-                                if (seq[i+1]) document.getElementById(seq[i+1]).focus();
-                            } else { if (seq[i+1]) document.getElementById(seq[i+1]).focus(); }
-                        } 
-                    }; 
-                }
-            });
-
-            setInterval(() => {
-                const now = new Date(), monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                const clockEl = document.getElementById('ui-clock'); if (clockEl) clockEl.innerText = `${String(now.getDate()).padStart(2, '0')} ${monthNames[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('id-ID', { hour12: false })}`;
-            }, 1000);
-
-            let idleEventThrottle;
-            ['scroll', 'mousemove', 'keydown', 'touchstart'].forEach(evt => window.addEventListener(evt, () => {
-                if (idleEventThrottle) return; idleEventThrottle = setTimeout(() => { resetIdleScrollTimer(); idleEventThrottle = null; }, 500); 
-            }, { passive: true }));
-            resetIdleScrollTimer();
+        window.changeArcPage = function(delta) {
+            const totalPages = Math.ceil(arcFilteredData.length / ARC_PER_PAGE) || 1; arcCurrentPage += delta;
+            if (arcCurrentPage < 1) arcCurrentPage = 1; if (arcCurrentPage > totalPages) arcCurrentPage = totalPages;
+            displayArcPage();
         };
 
-        // --- Logic Lainnya Tidak Ada Yang Berubah ---
-        function login(data) {
-            user = { ...data }; isSpectator = false; document.getElementById('login-page').classList.add('hidden'); document.getElementById('app-page').classList.remove('hidden'); document.getElementById('floating-monitor').classList.remove('hidden'); document.getElementById('ui-user').innerText = user.name.toUpperCase(); document.getElementById('ui-shift').innerText = user.shift; 
-            if(isTraining && !user.pros) user.pros = "SIMULASI";
-            const prosSelect = document.getElementById('ui-proses'); if (!Array.from(prosSelect.options).some(opt => opt.value === user.pros)) { prosSelect.add(new Option(user.pros, user.pros)); } prosSelect.value = user.pros;
-            reactivateInputs(); refreshUI(); document.getElementById('in-part').focus(); showToast(`Selamat datang, ${user.name.toUpperCase()}!`, 'info');
-        }
+        window.toggleMonitor = function() {
+            const panel = document.getElementById('floating-monitor'); if (!panel) return;
+            if (panel.classList.contains('open')) { panel.classList.remove('open'); } else { panel.classList.add('open'); }
+        };
 
-        function reactivateInputs() { document.getElementById('in-part').disabled = false; lockForm(); document.getElementById('btn-submit').innerText = "ENTER"; document.getElementById('btn-submit').className = "btn btn-primary"; document.getElementById('btn-submit').style = "width:100%; padding: 14px; font-size: 15px; margin-top: 15px;"; document.getElementById('btn-end-shift').classList.remove('hidden'); document.getElementById('spectator-warning').classList.add('hidden'); }
-        function refreshDatalists() { const lAssy = document.getElementById('list-assy'), lParts = document.getElementById('list-parts'), lPartsG = document.getElementById('list-parts-global'); if (lAssy) { let h = ""; MASTER.assy.forEach(v => h += `<option value="${v}">`); lAssy.innerHTML = h; } if (lParts && lPartsG) { let h = ""; MASTER.parts.forEach(v => h += `<option value="${v.pn}">`); lParts.innerHTML = h; lPartsG.innerHTML = h; } }
-        function openKeyboard(inputElement) { if (isSpectator) return; activeVkInput = inputElement; const vk = document.getElementById('virtual-keyboard'); const rect = inputElement.getBoundingClientRect(); vk.style.top = (rect.bottom + window.scrollY + 8) + 'px'; let leftPos = rect.left + window.scrollX; if (leftPos + 360 > window.innerWidth) { leftPos = window.innerWidth - 380; } vk.style.left = leftPos + 'px'; vk.classList.add('vk-show'); }
-        function closeKeyboard() { const vk = document.getElementById('virtual-keyboard'); if (vk) vk.classList.remove('vk-show'); activeVkInput = null; }
-        document.addEventListener('mousedown', function(e) { const vk = document.getElementById('virtual-keyboard'); if (activeVkInput && vk && !vk.contains(e.target) && e.target !== activeVkInput) { closeKeyboard(); } }); document.addEventListener('touchstart', function(e) { const vk = document.getElementById('virtual-keyboard'); if (activeVkInput && vk && !vk.contains(e.target) && e.target !== activeVkInput) { closeKeyboard(); } }, {passive: true});
-        function vkType(char) { if (activeVkInput) { activeVkInput.value += char; activeVkInput.focus(); checkFormCompleteness(); } } function vkBackspace() { if (activeVkInput && activeVkInput.value.length > 0) { activeVkInput.value = activeVkInput.value.slice(0, -1); activeVkInput.focus(); checkFormCompleteness(); } }
-
-        function updateImageSource(imgElement, placeholderElement, labelElement, path, label) { if (!imgElement || !placeholderElement || !labelElement) return; placeholderElement.classList.add('hidden'); if (!path || path === "") { imgElement.classList.add('hidden'); labelElement.classList.add('hidden'); return; } imgElement.src = `sampleImage/${path}`; imgElement.style.cursor = 'zoom-in'; imgElement.onclick = () => window.openModal('modal-zoom', imgElement.src); imgElement.onload = () => { imgElement.classList.remove('hidden'); labelElement.classList.remove('hidden'); labelElement.innerText = label; }; imgElement.onerror = () => { imgElement.classList.add('hidden'); labelElement.classList.add('hidden'); placeholderElement.classList.add('hidden'); }; }
-        function startCarousel(imgEl, placeholderEl, labelEl, simsArray) { if (carouselIntervalId) { clearInterval(carouselIntervalId); carouselIntervalId = null; } if (!simsArray || simsArray.length === 0) return; let idx = 0; updateImageSource(imgEl, placeholderEl, labelEl, simsArray[idx].img, simsArray[idx].pn); if (simsArray.length > 1) { carouselIntervalId = setInterval(() => { imgEl.style.opacity = '0'; labelEl.style.opacity = '0'; setTimeout(() => { idx = (idx + 1) % simsArray.length; updateImageSource(imgEl, placeholderEl, labelEl, simsArray[idx].img, simsArray[idx].pn); imgEl.style.opacity = '1'; labelEl.style.opacity = '1'; }, 600); }, 3000); } }
-        function handleVisualUpdate(val) { const part = MASTER.parts.find(p => p.pn === val); const warningBox = document.getElementById('ui-warning'); if (carouselIntervalId) { clearInterval(carouselIntervalId); carouselIntervalId = null; } if(part) { updateImageSource(document.getElementById('view-a'), document.getElementById('view-a-ph'), document.getElementById('ui-label-part-a'), part.img1, part.pn); startCarousel(document.getElementById('view-b'), document.getElementById('view-b-ph'), document.getElementById('ui-label-part-b'), part.sims); document.getElementById('ui-part-name').innerText = part.pn; document.getElementById('ui-part-loc').innerText = part.loc; document.getElementById('view-b-container').classList.add('similar-part-highlight'); document.getElementById('view-a-container').classList.add('correct-part-highlight'); document.getElementById('badge-ok').classList.remove('hidden'); document.getElementById('badge-ng').classList.remove('hidden'); warningBox.className = 'warning-flashing'; warningBox.innerHTML = '⚠ HATI-HATI MATERIAL SERUPA<br>PASTIKAN PART ACCESSORIES SESUAI DENGAN WOS!'; } else { document.getElementById('view-a').classList.add('hidden'); document.getElementById('view-a-ph').classList.remove('hidden'); document.getElementById('ui-label-part-a').classList.add('hidden'); document.getElementById('view-b').classList.add('hidden'); document.getElementById('view-b-ph').classList.remove('hidden'); document.getElementById('ui-label-part-b').classList.add('hidden'); document.getElementById('ui-part-name').innerText = '-'; document.getElementById('ui-part-loc').innerText = '-'; document.getElementById('view-b-container').classList.remove('similar-part-highlight'); document.getElementById('view-a-container').classList.remove('correct-part-highlight'); document.getElementById('badge-ok').classList.add('hidden'); document.getElementById('badge-ng').classList.add('hidden'); warningBox.className = 'warning-standby'; warningBox.innerHTML = 'STANDBY - MENUNGGU PART NO'; } }
-        // Variabel counter untuk Qty kecil (3-19)
-        let confirmSmallQtyCounter = 0;
-
-        let confirmCountdownTimer; // Variabel global penahan interval
-
-        function showConfirmationModal(partNo) {
-            const part = MASTER.parts.find(p => p.pn === partNo);
-            if(!part) return;
-
-            let simPath = part.sims && part.sims.length > 0 ? part.sims[0].img : "";
-            let simLabel = part.sims && part.sims.length > 0 ? part.sims[0].pn : "COMPARE";
-
-            updateImageSource(document.getElementById('confirm-img-part'), document.getElementById('confirm-img-part-ph'), document.getElementById('confirm-label-part-a'), part.img1, part.pn); 
-            updateImageSource(document.getElementById('confirm-img-loc'), document.getElementById('confirm-img-loc-ph'), document.getElementById('confirm-label-part-b'), simPath, simLabel);
-
-            document.getElementById('confirm-ui-pn').innerText = part.pn;
-            document.getElementById('confirm-ui-loc').innerText = part.loc;
-
-            openModal('modal-confirmation');
-
-            // Logika Countdown 5 Detik
-            let timeLeft = 5;
-            const countdownEl = document.getElementById('confirm-countdown');
-            countdownEl.innerText = timeLeft + 's';
-            
-            clearInterval(confirmCountdownTimer); 
-            confirmCountdownTimer = setInterval(() => {
-                timeLeft--;
-                countdownEl.innerText = timeLeft + 's';
-                
-                if (timeLeft <= 0) {
-                    clearInterval(confirmCountdownTimer);
-                    closeModal('modal-confirmation');
-                    
-                    // PERBAIKAN: Kembalikan kursor ke kolom QTY setelah modal lenyap
-                    const qtyInput = document.getElementById('in-qty');
-                    if(qtyInput && !qtyInput.disabled) qtyInput.focus();
-                }
-            }, 1000);
-        }
-
-        function logout() { isIntentionalExit = true; location.reload(); } function changeProcess(newPros) { user.pros = newPros; refreshUI(); }
-        window.openArchive = function(show) { if(show) { window.openModal('modal-arc'); document.getElementById('arc-date').value = getShiftDateISO(new Date()); executeWithLoader(renderArchiveTable); } else { window.closeModal('modal-arc'); } };
-        window.openMultiplier = function(e) { if (e) e.preventDefault(); window.openModal('modal-mul'); document.getElementById('in-mul').focus(); }; window.applyMultiplier = function() { multiplier = parseInt(document.getElementById('in-mul').value) || 1; document.getElementById('ui-multiplier').innerText = multiplier > 1 ? `(x${multiplier})` : ''; window.closeModal('modal-mul'); }; window.toggleMonitor = function() { const panel = document.getElementById('floating-monitor'); if (!panel) return; if (panel.classList.contains('open')) { panel.classList.remove('open'); } else { panel.classList.add('open'); } }; function resetIdleScrollTimer() { if (isSpectator) return; clearTimeout(idleScrollTimer); idleScrollTimer = setTimeout(() => { if (window.scrollY > 150) { smoothScrollToTop(1200); } }, 15000); } function smoothScrollToTop(duration) { const startPosition = window.pageYOffset; const startTime = performance.now(); function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; } function animation(currentTime) { const timeElapsed = currentTime - startTime; let progress = timeElapsed / duration; if (progress > 1) progress = 1; const easeProgress = easeInOutCubic(progress); window.scrollTo(0, startPosition * (1 - easeProgress)); if (progress < 1) { requestAnimationFrame(animation); } else { const qtyInput = document.getElementById('in-qty'); const partInput = document.getElementById('in-part'); if (qtyInput && !qtyInput.disabled) { qtyInput.focus(); } else if (partInput && !partInput.disabled) { partInput.focus(); } } } requestAnimationFrame(animation); }
-
-        // Management UI Modal Logika
-        window.openLicenseListModal = function() { const listEl = document.getElementById('license-list-container'); listEl.innerHTML = ''; MASTER.users.forEach(u => { listEl.innerHTML += `<div style="padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 800; color: var(--text-main); font-size: 13px;">${u.name}</span><span style="font-size: 10px; color: white; background: var(--primary); padding: 2px 8px; border-radius: 8px; font-weight: 900;">ID: ${u.id}</span></div>`; }); if(MASTER.users.length === 0) listEl.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600;">Belum ada lisensi terdaftar.<br>Silakan tambah atau upload.</div>`; window.openModal('modal-license-list'); }; window.openAddLicenseModal = function() { window.closeModal('modal-license-list'); window.openModal('modal-add-license'); }; window.submitNewLicense = function() { const id = document.getElementById('new-lic-id').value.trim(); const name = document.getElementById('new-lic-name').value.trim(); const pass = document.getElementById('new-lic-pass').value.trim(); const shift = document.getElementById('new-lic-shift').value; const pros = document.getElementById('new-lic-pros').value; if(!id || !name || !pass) { showToast('Harap isi semua kolom wajib!', 'error'); return; } if(MASTER.users.find(u => u.id === id)) { showToast('ID Lisensi sudah terdaftar!', 'error'); return; } const newUser = { id, name, pass, shift: shift, kat: "MP", pros: pros }; let dynamicUsers = []; try { dynamicUsers = JSON.parse(localStorage.getItem('dynamicUsers') || '[]'); } catch(e){} dynamicUsers.push(newUser); localStorage.setItem('dynamicUsers', JSON.stringify(dynamicUsers)); MASTER.users.push(newUser); const dataStr = JSON.stringify(newUser, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob); const fileName = `LISENSI_${id.replace(/[^a-zA-Z0-9]/g, '_')}.json`; const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); document.getElementById('new-lic-id').value = ''; document.getElementById('new-lic-name').value = ''; document.getElementById('new-lic-pass').value = ''; showToast('Lisensi baru disimpan!', 'success'); window.closeModal('modal-add-license'); window.openLicenseListModal(); }; window.openTrainingListModal = function() { const listEl = document.getElementById('training-list-container'); listEl.innerHTML = ''; trainingUsersList.forEach(name => { listEl.innerHTML += `<div onclick="loginAsTraining('${name}')" style="padding: 14px 12px; border-bottom: 1px solid var(--border); font-weight: 800; cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px;" onmouseover="this.style.background='var(--bg-body)'; this.style.color='var(--primary)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-main)';">${name} <span style="float: right; color: var(--primary);">➔</span></div>`; }); if(trainingUsersList.length === 0) listEl.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600;">Belum ada riwayat.</div>`; window.openModal('modal-training-list'); }; window.loginAsTraining = function(name) { window.closeModal('modal-training-list'); isTraining = true; executeWithLoader(() => login({ id: "TRAINING", name: name + " (TRN)", shift: "T", kat: "EDU", pros: "SIMULASI" })); }; window.startTraining = function() { window.closeModal('modal-training-list'); window.openModal('modal-training'); document.getElementById('in-training-name').focus(); }; window.submitTrainingName = function() { let tName = document.getElementById('in-training-name').value.trim(); if (!tName) tName = "PESERTA TRAINING"; if(!trainingUsersList.includes(tName)) { trainingUsersList.push(tName); localStorage.setItem('trainingUsers', JSON.stringify(trainingUsersList)); } isTraining = true; window.closeModal('modal-training'); executeWithLoader(() => login({ id: "TRAINING", name: tName + " (TRN)", shift: "T", kat: "EDU", pros: "SIMULASI" })); }; window.submitNewPart = function() { const pn = document.getElementById('new-part-no').value.trim().toUpperCase(); if(!pn) { showToast('Part No tidak boleh kosong!', 'error'); return; } if(MASTER.parts.find(p => p.pn.toUpperCase() === pn)) { showToast('Sudah terdaftar!', 'error'); return; } const newPart = { pn: pn, loc: "MANUAL INPUT", img1: "", sims: [] }; MASTER.parts.push(newPart); let customParts = []; try { customParts = JSON.parse(localStorage.getItem('customParts') || '[]'); } catch(e){} customParts.push(newPart); localStorage.setItem('customParts', JSON.stringify(customParts)); refreshDatalists(); document.getElementById('new-part-no').value = ''; window.closeModal('modal-add-part'); showToast('Berhasil disimpan!', 'success'); }; window.submitNewAssy = function() { const assy = document.getElementById('new-assy-no').value.trim().toUpperCase(); if(!assy) { showToast('Assy No tidak boleh kosong!', 'error'); return; } if(MASTER.assy.find(a => a.toUpperCase() === assy)) { showToast('Sudah terdaftar!', 'error'); return; } MASTER.assy.push(assy); let customAssy = []; try { customAssy = JSON.parse(localStorage.getItem('customAssy') || '[]'); } catch(e){} customAssy.push(assy); localStorage.setItem('customAssy', JSON.stringify(customAssy)); refreshDatalists(); document.getElementById('new-assy-no').value = ''; window.closeModal('modal-add-assy'); showToast('Berhasil disimpan!', 'success'); }; function handleGlobalSearch(val) { executeWithLoader(() => { const part = MASTER.parts.find(p => p.pn === val); if (part) { window.openModal('modal-search'); let simPath = part.sims && part.sims.length > 0 ? part.sims[0].img : ""; let simLabel = part.sims && part.sims.length > 0 ? part.sims[0].pn : "COMPARE"; updateImageSource(document.getElementById('search-img-part'), document.getElementById('search-img-part-ph'), document.getElementById('search-label-part-a'), part.img1, part.pn); updateImageSource(document.getElementById('search-img-loc'), document.getElementById('search-img-loc-ph'), document.getElementById('search-label-part-b'), simPath, simLabel); document.getElementById('search-ui-pn').innerText = part.pn; document.getElementById('search-ui-loc').innerText = part.loc; document.getElementById('search-ui-warning').classList.remove('hidden'); document.getElementById('search-img-b-container').classList.add('similar-part-highlight'); document.getElementById('search-img-a-container').classList.add('correct-part-highlight'); document.getElementById('search-badge-ok').classList.remove('hidden'); document.getElementById('search-badge-ng').classList.remove('hidden'); document.getElementById('global-search').value = ''; document.getElementById('global-search').blur(); } }); } window.closeSearchModal = function() { window.closeModal('modal-search'); document.getElementById('search-img-b-container').classList.remove('similar-part-highlight'); document.getElementById('search-img-a-container').classList.remove('correct-part-highlight'); document.getElementById('search-badge-ok').classList.add('hidden'); document.getElementById('search-badge-ng').classList.add('hidden'); };
-        async function handleCustomDrop(event, mode) { showLoader(); setTimeout(async () => { try { const items = event.dataTransfer.items; if (!items) { hideLoader(); return; } const files = await getFilesFromDataTransfer(items); processFiles(files, mode); } catch(e) { hideLoader(); } }, 50); } function handleFileInput(event, mode) { showLoader(); setTimeout(() => { const files = Array.from(event.target.files); if (!files.length) { hideLoader(); return; } processFiles(files, mode); event.target.value = ''; }, 50); } async function getFilesFromDataTransfer(items) { let files = []; let promises = []; for (let i = 0; i < items.length; i++) { let item = items[i].webkitGetAsEntry(); if (item) promises.push(traverseFileTree(item, files)); } await Promise.all(promises); return files; } function traverseFileTree(item, files) { return new Promise((resolve) => { if (item.isFile) { item.file(file => { files.push(file); resolve(); }); } else if (item.isDirectory) { let dirReader = item.createReader(); dirReader.readEntries(async entries => { let promises = []; for (let i = 0; i < entries.length; i++) { promises.push(traverseFileTree(entries[i], files)); } await Promise.all(promises); resolve(); }); } else { resolve(); } }); } function processFiles(files, mode) { let jsonFiles = files.filter(f => f.name.endsWith('.json')); if (jsonFiles.length === 0) { hideLoader(); showToast("Tidak ada file JSON.", "error"); return; } let filesRead = 0; if (mode === 'sync') { let loadedUsers = []; jsonFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { try { const json = JSON.parse(e.target.result); if (json.id && json.name && json.pass && !Array.isArray(json)) loadedUsers.push(json); } catch(err) {} filesRead++; if (filesRead === jsonFiles.length) { try { localStorage.setItem('dynamicUsers', JSON.stringify(loadedUsers)); MASTER.users = [...HARDCODED_USERS, ...loadedUsers]; window.closeModal('modal-import-license'); showToast(`Berhasil mensinkronisasi ${loadedUsers.length} Lisensi.`, 'success'); } catch(err) { MASTER.users = [...HARDCODED_USERS, ...loadedUsers]; window.closeModal('modal-import-license'); } hideLoader(); } }; reader.readAsText(file); }); } }
+        window.exportArchiveJSON = function() {
+            const targetStr = document.getElementById('arc-date').value; if (!targetStr) { showToast("Pilih tanggal terlebih dahulu.", "error"); return; }
+            const filtered = records.filter(r => getShiftDateISO(r.time) === targetStr); if(filtered.length === 0) { showToast("Tidak ada data untuk diunduh pada tanggal tersebut.", "error"); return; }
+            const dataStr = JSON.stringify(filtered, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob);
+            const fileName = `${user.name.replace(/\s+/g, '_')}_${targetStr}.json`; const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+        };
 
         function resetIdleScrollTimer() {
             if (isSpectator) return; clearTimeout(idleScrollTimer);
@@ -1167,11 +1133,11 @@
                 const timeElapsed = currentTime - startTime; let progress = timeElapsed / duration; if (progress > 1) progress = 1;
                 const easeProgress = easeInOutCubic(progress); window.scrollTo(0, startPosition * (1 - easeProgress));
                 if (progress < 1) { requestAnimationFrame(animation); } else {
-                    const qtyInput = document.getElementById('in-qty'); const partInput = document.getElementById('in-part');
-                    if (qtyInput && !qtyInput.disabled) { qtyInput.focus(); } else if (partInput && !partInput.disabled) { partInput.focus(); }
+                    const serA = document.getElementById('in-serial-a'); const partInput = document.getElementById('in-part');
+                    if (serA && !serA.disabled) { serA.focus(); } else if (partInput && !partInput.disabled) { partInput.focus(); }
                 }
             } requestAnimationFrame(animation);
-        };
+        }
     </script>
 </body>
 </html>
